@@ -67,7 +67,7 @@ export default function RoleVault() {
 				{screen === 'profile' && <ProfileScreen go={go} detectedSkills={detectedSkills} resumeName={resumeName} setDetectedSkills={setDetectedSkills} setResumeName={setResumeName} />}
 				{screen === 'faq' && <FaqScreen go={go} />}
 			</div>
-			<Switcher screen={screen} go={go} />
+			{import.meta.env.DEV && <Switcher screen={screen} go={go} />}
 		</>
 	)
 }

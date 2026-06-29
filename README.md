@@ -559,19 +559,19 @@ project name (`job-posting-dev`) so it can coexist with the production stack.
 
 Run from the repository root unless noted.
 
-| Command                                     | What it does                            |
-| ------------------------------------------- | --------------------------------------- |
+| Command                                     | What it does                                               |
+| ------------------------------------------- | ---------------------------------------------------------- |
 | `npm run dev`                               | Run client + server concurrently (dev), via `concurrently` |
-| `npm run watch`                             | Alias for `npm run dev`                 |
-| `npm run dev:client` / `npm run dev:server` | Run one side                            |
-| `npm run build`                             | Build server then client for production |
-| `npm run start`                             | Start the compiled API (server only)    |
-| `npm run typecheck`                         | Type-check both workspaces              |
-| `npm run lint` / `npm run lint:fix`         | ESLint across both workspaces           |
-| `npm run test`                              | Run Vitest in both workspaces           |
-| `npm run format` / `npm run format:check`   | Prettier write / check                  |
-| `npm run docker:prod` / `:down`             | Build + run (detached) / tear down the prod stack    |
-| `npm run docker:dev` / `:build` / `:down`   | Run / rebuild / tear down the dev (hot-reload) stack |
+| `npm run watch`                             | Alias for `npm run dev`                                    |
+| `npm run dev:client` / `npm run dev:server` | Run one side                                               |
+| `npm run build`                             | Build server then client for production                    |
+| `npm run start`                             | Start the compiled API (server only)                       |
+| `npm run typecheck`                         | Type-check both workspaces                                 |
+| `npm run lint` / `npm run lint:fix`         | ESLint across both workspaces                              |
+| `npm run test`                              | Run Vitest in both workspaces                              |
+| `npm run format` / `npm run format:check`   | Prettier write / check                                     |
+| `npm run docker:prod` / `:down`             | Build + run (detached) / tear down the prod stack          |
+| `npm run docker:dev` / `:build` / `:down`   | Run / rebuild / tear down the dev (hot-reload) stack       |
 
 Per-workspace (inside `client/` or `server/`): `npm run dev`, `build`,
 `typecheck`, `lint`, `test`.
