@@ -19,6 +19,9 @@ dist-ssr
 # TS build info
 *.tsbuildinfo
 
+# Local code-intelligence tooling (machine-local, never committed)
+.codegraph/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

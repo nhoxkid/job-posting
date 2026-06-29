@@ -40,12 +40,12 @@ npm install && npm run dev      # → http://localhost:5173
 
 ### Highlights
 
-|                                  |                                                                                                                                                                |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|                                  |                                                                                                                                                                 |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🚀 **One-command local dev**     | `npm run dev` boots the client and API together against a seeded in-memory data layer — no external services to provision before you start building.            |
 | 🧱 **Layered, typed backend**    | Routes → controllers → services → repositories, behind a single `JobRepository` interface. The in-memory and PostgreSQL implementations swap via one env value. |
 | 🎯 **Product-first framing**     | Resume-match scoring and visa sponsorship are first-class concepts, surfaced up front in the UI.                                                                |
-| 🐘 **Production path ready**     | A PostgreSQL implementation ships behind `DB_DRIVER`; `docker compose up` brings up a persistent, production-shaped stack.                                       |
+| 🐘 **Production path ready**     | A PostgreSQL implementation ships behind `DB_DRIVER`; `docker compose up` brings up a persistent, production-shaped stack.                                      |
 | 🧪 **Typed & tested end-to-end** | Strict TypeScript on both sides, Vitest + Testing Library on the client, supertest on the server, ESLint + Prettier across the monorepo.                        |
 
 ---
@@ -348,9 +348,25 @@ chrome.
   green and the UI primitives inherit it automatically.
 - The design screens use **inline styles** for pixel-faithful gradients, shadows,
   and animations. Shared keyframes (`spr-up`, `auroraA/B`, `floaty`, `marquee`)
-  and hover classes (`rv-*`) live in `styles/index.css`.
-- The design is **light-only**; `ThemeProvider` defaults to light (a dark token
-  set exists, but there is no toggle in the UI).
+  and hover classes (`rv-*`) live in `styles/index.css` (the `rv-*` hover classes
+  have `.dark` overrides so hover states stay readable in dark mode).
+- **Light & dark modes** ship with a sun/moon toggle in the top-right of the
+  in-app nav (`RvNav`) and the landing header: it shows a sun in light mode and a
+  moon in dark mode, and each click flips between the two. `ThemeProvider`
+  adds/removes `.dark` on `<html>`, which flips every token-driven component (the
+  `components/ui/*` primitives) automatically. (`ThemeProvider` still understands
+  a `system` preference from the OS / a stored value, but the toggle itself is a
+  simple light↔dark switch.)
+- Because the design screens are inline-styled (not token-driven), they theme via
+  a shared palette hook, **`lib/palette.ts` → `usePalette()`**, which returns a
+  semantic colour set (`surface`, `ink`, `body`, `accent`, …) that swaps with the
+  active theme. Every in-app screen consumes it, so **dark mode applies across the
+  whole app**. The landing hero and auth gradient panels are intentionally dark in
+  both themes (decorative), with their on-gradient text kept as-is.
+- The chosen theme is **persisted to the backend** (`GET`/`PUT /api/preferences`)
+  in addition to `localStorage`, so it can later sync per user / across devices.
+  `localStorage` is the instant-paint cache; the backend value is hydrated on
+  load. If the API is unreachable the local choice still applies.
 
 ---
 
@@ -358,14 +374,16 @@ chrome.
 
 Base URL (dev): `http://localhost:4000/api`
 
-| Method | Path        | Description           | Body             | Success                              |
-| ------ | ----------- | --------------------- | ---------------- | ------------------------------------ |
-| GET    | `/health`   | Liveness check        | —                | `200 {"status":"ok"}`                |
-| GET    | `/jobs`     | List jobs (paginated) | —                | `200` paginated envelope             |
-| GET    | `/jobs/:id` | Get one job           | —                | `200` Job, `404` if missing          |
-| POST   | `/jobs`     | Create a job          | `CreateJobInput` | `201` Job, `400` on validation error |
-| PATCH  | `/jobs/:id` | Update a job          | partial Job      | `200` Job, `404` if missing          |
-| DELETE | `/jobs/:id` | Delete a job          | —                | `204`, `404` if missing              |
+| Method | Path           | Description           | Body             | Success                               |
+| ------ | -------------- | --------------------- | ---------------- | ------------------------------------- |
+| GET    | `/health`      | Liveness check        | —                | `200 {"status":"ok"}`                 |
+| GET    | `/jobs`        | List jobs (paginated) | —                | `200` paginated envelope              |
+| GET    | `/jobs/:id`    | Get one job           | —                | `200` Job, `404` if missing           |
+| POST   | `/jobs`        | Create a job          | `CreateJobInput` | `201` Job, `400` on validation error  |
+| PATCH  | `/jobs/:id`    | Update a job          | partial Job      | `200` Job, `404` if missing           |
+| DELETE | `/jobs/:id`    | Delete a job          | —                | `204`, `404` if missing               |
+| GET    | `/preferences` | Read UI preferences   | —                | `200` Preferences                     |
+| PUT    | `/preferences` | Save UI preferences   | `{ theme }`      | `200` Preferences, `400` on bad theme |
 
 **`GET /jobs` query params** (all optional):
 
@@ -557,7 +575,10 @@ Intentional, given the current scope:
 4. **Sponsorship is a tag convention**, not a schema column (see §6).
 5. **Landing hero cards** (the three floating match cards) are decorative/fixed
    sample content, matching the original design.
-6. **Light-only theme.** No dark-mode toggle in the UI.
+6. **Theme persistence has no auth scope yet.** Light & dark modes are fully
+   themed across every screen and persist to `/api/preferences`, but with no
+   accounts backend the preference is stored against a single shared profile id
+   (`default`); it becomes per-user once auth lands.
 
 ---
 

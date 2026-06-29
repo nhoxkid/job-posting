@@ -26,7 +26,12 @@ function buildUrl(path: string, params?: QueryParams): string {
   return qs ? `${url}?${qs}` : url
 }
 
-async function request<T>(method: string, path: string, body?: unknown, params?: QueryParams): Promise<T> {
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  params?: QueryParams,
+): Promise<T> {
   let res: Response
   try {
     res = await fetch(buildUrl(path, params), {
@@ -56,8 +61,10 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
 
 export const apiClient = {
   baseUrl: BASE_URL,
-  get: <T>(path: string, params?: QueryParams): Promise<T> => request<T>('GET', path, undefined, params),
+  get: <T>(path: string, params?: QueryParams): Promise<T> =>
+    request<T>('GET', path, undefined, params),
   post: <T>(path: string, body: unknown): Promise<T> => request<T>('POST', path, body),
+  put: <T>(path: string, body: unknown): Promise<T> => request<T>('PUT', path, body),
   patch: <T>(path: string, body: unknown): Promise<T> => request<T>('PATCH', path, body),
   delete: <T>(path: string): Promise<T> => request<T>('DELETE', path),
 }

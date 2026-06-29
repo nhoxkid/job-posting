@@ -81,7 +81,13 @@
     margin: 0;
     background-color: var(--background);
     color: var(--foreground);
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-family:
+      'Plus Jakarta Sans',
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 }
@@ -174,6 +180,23 @@
 }
 .rv-faq-card:hover {
   border-color: #bfe3d0 !important;
+}
+
+/* Dark-mode hover variants (the design screens are inline-styled, so these
+ * hover effects can't use Tailwind tokens — override them under .dark). */
+.dark .rv-job-card:hover {
+  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.5) !important;
+  border-color: #2b6450 !important;
+}
+.dark .rv-table-row:hover {
+  background: #10342a !important;
+}
+.dark .rv-rec-card:hover {
+  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.45) !important;
+  border-color: #2b6450 !important;
+}
+.dark .rv-faq-card:hover {
+  border-color: #2b6450 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -18,9 +18,7 @@ export function formatEmploymentType(type: string): string {
 }
 
 /** Format a salary range, e.g. "$80,000 – $110,000" or "$45/hr". */
-export function formatSalary(
-  job: Pick<Job, 'salaryMin' | 'salaryMax' | 'currency'>,
-): string {
+export function formatSalary(job: Pick<Job, 'salaryMin' | 'salaryMax' | 'currency'>): string {
   const { salaryMin, salaryMax, currency } = job
   if (salaryMin == null && salaryMax == null) return 'Not disclosed'
 

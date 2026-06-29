@@ -108,13 +108,7 @@ export function RvFooter() {
   )
 }
 
-function FooterColumn({
-  title,
-  links,
-}: {
-  title: string
-  links: { to: string; label: string }[]
-}) {
+function FooterColumn({ title, links }: { title: string; links: { to: string; label: string }[] }) {
   return (
     <div>
       <div
