@@ -67,14 +67,13 @@ export class JobService {
   async list(query: JobQuery): Promise<Paginated<Job>> {
     const { items, total } = await this.repo.list(query)
     const page = Math.max(1, Math.trunc(query.page ?? 1))
-    const pageSize = items.length > 0 ? items.length : Math.trunc(query.pageSize ?? 12)
-    const effectivePageSize = Math.trunc(query.pageSize ?? 12)
+    const pageSize = Math.min(100, Math.max(1, Math.trunc(query.pageSize ?? 12)))
     return {
       data: items,
       page,
-      pageSize: effectivePageSize || pageSize,
+      pageSize,
       total,
-      totalPages: Math.max(1, Math.ceil(total / (effectivePageSize || 12))),
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
     }
   }
 

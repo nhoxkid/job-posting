@@ -17,18 +17,35 @@ export function formatEmploymentType(type: string): string {
   return EMPLOYMENT_LABELS[type] ?? type
 }
 
+/**
+ * `Intl.NumberFormat` is costly to construct, so cache one formatter per
+ * currency. Job lists render this hundreds of times — building it once per
+ * currency instead of once per call is the difference that matters.
+ */
+const currencyFormatters = new Map<string, Intl.NumberFormat>()
+
+function currencyFormatter(currency: string): Intl.NumberFormat {
+  let formatter = currencyFormatters.get(currency)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    })
+    currencyFormatters.set(currency, formatter)
+  }
+  return formatter
+}
+
 /** Format a salary range, e.g. "$80,000 – $110,000" or "$45/hr". */
 export function formatSalary(job: Pick<Job, 'salaryMin' | 'salaryMax' | 'currency'>): string {
-  const { salaryMin, salaryMax, currency } = job
+  const { salaryMin, salaryMax } = job
   if (salaryMin == null && salaryMax == null) return 'Not disclosed'
 
+  const currency = job.currency || 'USD'
   const fmt = (value: number) => {
     try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currency || 'USD',
-        maximumFractionDigits: 0,
-      }).format(value)
+      return currencyFormatter(currency).format(value)
     } catch {
       return `${currency} ${value.toLocaleString()}`
     }
