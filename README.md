@@ -8,11 +8,14 @@ A full-stack platform for internships, co-ops, and new-grad roles — built so t
 two things candidates care about most, **how well a role fits** and **whether it
 sponsors a visa**, are surfaced before anything else.
 
-**RoleVault** is the polished React experience; behind it sits a clean, typed
-Express REST API that runs with **zero infrastructure** out of the box.
+**RoleVault** is a design-led product under active development. This milestone
+delivers the full React experience on top of a deliberately layered,
+end-to-end–typed Express API — running locally with no setup, and ready for
+PostgreSQL behind a single environment switch.
 
 <br/>
 
+[![Status](https://img.shields.io/badge/status-active%20development-2EA043)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-build-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
@@ -35,15 +38,15 @@ npm install && npm run dev      # → http://localhost:5173
 > the complete API, every environment variable, and every way to run the
 > stack — it's all here, and it's all verified against the code.
 
-### Why it's nice to work with
+### Highlights
 
-|                                  |                                                                                                                                                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 🚀 **Runs in one command**       | `npm run dev` boots client + server with a seeded in-memory dataset — no database, no config, no `.env` required.                                            |
-| 🧱 **Clean layered backend**     | Routes → controllers → services → repositories, behind a single `JobRepository` interface. Swapping in-memory for Postgres is a one-line, env-driven change. |
-| 🎯 **Product-first framing**     | Resume-match scoring and visa-sponsorship are first-class concepts, surfaced up front in the UI.                                                             |
-| 🐘 **Postgres when you want it** | A full PostgreSQL path ships behind `DB_DRIVER` — `docker compose up` gives you a persistent, production-shaped stack.                                       |
-| 🧪 **Typed & tested end-to-end** | Strict TypeScript on both sides, Vitest + Testing Library on the client, supertest on the server, ESLint + Prettier across the monorepo.                     |
+|                                  |                                                                                                                                                                |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🚀 **One-command local dev**     | `npm run dev` boots the client and API together against a seeded in-memory data layer — no external services to provision before you start building.            |
+| 🧱 **Layered, typed backend**    | Routes → controllers → services → repositories, behind a single `JobRepository` interface. The in-memory and PostgreSQL implementations swap via one env value. |
+| 🎯 **Product-first framing**     | Resume-match scoring and visa sponsorship are first-class concepts, surfaced up front in the UI.                                                                |
+| 🐘 **Production path ready**     | A PostgreSQL implementation ships behind `DB_DRIVER`; `docker compose up` brings up a persistent, production-shaped stack.                                       |
+| 🧪 **Typed & tested end-to-end** | Strict TypeScript on both sides, Vitest + Testing Library on the client, supertest on the server, ESLint + Prettier across the monorepo.                        |
 
 ---
 
@@ -98,8 +101,10 @@ workspaces** so you install and run both from the root:
 - **`client/`** — a React single-page app (the browser UI).
 - **`server/`** — an Express REST API (the backend).
 
-Out of the box the API serves a seeded in-memory dataset (zero infrastructure).
-A full **PostgreSQL** path is implemented for persistence / production.
+By default the API runs against a seeded in-memory data layer, so the app is
+fully functional locally with no external services to set up. A production-grade
+**PostgreSQL** path is wired in behind the `DB_DRIVER` switch for persistence and
+deployment.
 
 ---
 
