@@ -1,0 +1,82 @@
+# Development stack with live reload.
+#
+#   docker compose -f docker-compose.dev.yml up
+#
+# Unlike docker-compose.yml (which builds production images), this mounts your
+# source into the containers and runs the dev servers (Vite + tsx watch), so
+# edits on the host hot-reload inside the containers.
+#
+# A separate project name keeps this stack's containers/volumes from colliding
+# with the production one, so both can exist side by side.
+name: job-posting-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-job_posting}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    image: node:20-alpine
+    working_dir: /app
+    restart: unless-stopped
+    # Install deps (into the named volume, not the host) then run the watcher.
+    # --no-package-lock avoids writing a stray lockfile into the bind-mounted
+    # source; the root workspace lockfile is the authoritative one.
+    command: sh -c "npm install --no-package-lock && npm run dev"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 4000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      DB_DRIVER: postgres
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-job_posting}
+      # tsx's watcher (chokidar) needs polling: Windows/WSL bind mounts don't
+      # deliver native filesystem events into the Linux container.
+      CHOKIDAR_USEPOLLING: 'true'
+    volumes:
+      - ./server:/app
+      # Keep the container's node_modules; don't let the host shadow them.
+      - server-node-modules:/app/node_modules
+    ports:
+      - '${SERVER_PORT:-4000}:4000'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  client:
+    image: node:20-alpine
+    working_dir: /app
+    restart: unless-stopped
+    command: sh -c "npm install --no-package-lock && npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      # The browser runs on the host, so it reaches the API via the published port.
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:4000/api}
+      # Enables polling-based file watching (see vite.config.ts) for the same
+      # bind-mount reason as the server above.
+      VITE_USE_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
+    volumes:
+      - ./client:/app
+      - client-node-modules:/app/node_modules
+    ports:
+      - '${CLIENT_PORT:-5173}:5173'
+    depends_on:
+      - server
+
+volumes:
+  db-data:
+  server-node-modules:
+  client-node-modules:
