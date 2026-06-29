@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "description": "Full-stack job posting platform (React client + Express API)",
+  "//security": "package-lock.json is pinned to patched releases (npm audit = 0): shell-quote>=1.8.4 (via concurrently>=9.2.3), form-data>=4.0.6, esbuild>=0.28.1. Install with `npm ci` (not `npm install`) to reproduce the exact audited, cross-platform tree. npm cannot store comments in package-lock.json, so this note lives here.",
   "type": "module",
   "workspaces": [
     "client",
