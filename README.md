@@ -639,3 +639,29 @@ forced, clear it: in the browser console run
 **Docker: `docker: command not found` or daemon not running.**
 Install Docker Desktop and launch it once (starts the daemon, sets up the WSL2
 backend). Verify with `docker --version` and `docker compose version`.
+
+## 16. Contributions (Milestone 2):
+
+Moez: 
+- Front end functionality (Home screen and other page routing, browsing different jobs with various filters, job details page, and FAQ page).
+
+Tahmeed:
+- Front end functionality (Resume upload, skills extraction, simple job recommendation system.)
+
+Adithya:
+- Wrote SQL create table statements and verified they ran, uploaded it to document in myls
+
+Nirmaan:
+- Backend routes and controllers. Contributed to README.
+
+Duc:
+- Project Skeleton and making sure the server had a runnable entry point. Also contributed to README.
+
+Tio:
+- Made the ER diagram for the tables.
+
+Clinton:
+- Converted all the wireframes to actual UI designs with figma.
+
+Michael:
+- Updated the activity blog with tasks for Milestone two.
