@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { fetchJobs } from './api/clientApi'
-import { Switcher } from './components/layout/RoleVaultChrome'
 import { computeRecommendations, readDetectedSkills, readResumeName } from './features/jobs/rolevault'
 import {
 	AuthScreen,
@@ -56,7 +55,7 @@ export default function RoleVault() {
 				.rv-rec-card:hover { box-shadow: 0 10px 26px rgba(16,33,27,0.07) !important; border-color: #CDE3D6 !important; }
 				.rv-faq-card:hover { border-color: #CDE3D6 !important; }
 			`}</style>
-			<div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: '#10211B', background: '#faf9f5', minHeight: '100vh', paddingBottom: 80, WebkitFontSmoothing: 'antialiased' }}>
+			<div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: '#10211B', background: '#faf9f5', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
 				{screen === 'landing' && <LandingScreen go={go} selectJob={selectJob} featuredHomeJobs={featuredHomeJobs} />}
 				{screen === 'browse' && <BrowseScreen go={go} selectJob={selectJob} jobs={jobs} />}
 				{screen === 'detail' && <DetailScreen go={go} jobId={selectedJobId} />}
@@ -67,7 +66,6 @@ export default function RoleVault() {
 				{screen === 'profile' && <ProfileScreen go={go} detectedSkills={detectedSkills} resumeName={resumeName} setDetectedSkills={setDetectedSkills} setResumeName={setResumeName} />}
 				{screen === 'faq' && <FaqScreen go={go} />}
 			</div>
-			{import.meta.env.DEV && <Switcher screen={screen} go={go} />}
 		</>
 	)
 }

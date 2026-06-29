@@ -35,25 +35,3 @@ export const NavBar = ({ screen, go, variant = 'default' }: { screen: RoleVaultS
 		</div>
 	)
 }
-
-export const Switcher = ({ screen, go }: { screen: RoleVaultScreen; go: (s: RoleVaultScreen) => void }) => {
-	const screens: { key: RoleVaultScreen; label: string }[] = [
-		{ key: 'landing', label: 'Home' }, { key: 'browse', label: 'Browse' }, { key: 'detail', label: 'Job Detail' },
-		{ key: 'login', label: 'Login' }, { key: 'register', label: 'Register' }, { key: 'onboarding', label: 'Onboarding' },
-		{ key: 'recommended', label: 'Recommended' }, { key: 'profile', label: 'Profile' }, { key: 'faq', label: 'FAQ' },
-	]
-	return (
-		<div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 200, background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(10px)', borderTop: '1px solid #E3E9E6', boxShadow: '0 -2px 16px rgba(16,33,27,0.05)' }}>
-			<div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', gap: 20, height: 52 }}>
-				<span style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 11, letterSpacing: '0.09em', textTransform: 'uppercase', color: '#9AA8A2', whiteSpace: 'nowrap' }}>Screens</span>
-				<div style={{ flex: 1, display: 'flex', gap: 4, alignItems: 'stretch', overflowX: 'auto', height: '100%' }}>
-					{screens.map((item) => (
-						<button key={item.key} onClick={() => go(item.key)} style={{ fontFamily: "'Plus Jakarta Sans'", fontSize: 13, fontWeight: screen === item.key ? 700 : 600, padding: '0 14px', border: 'none', borderBottom: `2px solid ${screen === item.key ? '#12805A' : 'transparent'}`, background: 'transparent', color: screen === item.key ? '#12805A' : '#6A7872', cursor: 'pointer', whiteSpace: 'nowrap', height: '100%', transition: 'color .12s' }}>
-							{item.label}
-						</button>
-					))}
-				</div>
-			</div>
-		</div>
-	)
-}
