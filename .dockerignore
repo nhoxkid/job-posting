@@ -1,0 +1,15 @@
+# Build context is the repo root (see docker-compose.yml). Keep it lean and
+# never ship host-installed deps/artifacts into the image — npm ci rebuilds
+# node_modules cleanly from the committed lockfile.
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+npm-debug.log*
+.git
+.gitignore
+# Compose/Docker metadata isn't needed inside any image.
+docker-compose*.yml
+**/Dockerfile
+**/.dockerignore
