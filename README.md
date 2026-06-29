@@ -1,11 +1,49 @@
-# RoleVault — Job Posting Platform
+<div align="center">
 
-A full-stack early-careers job board (internships, co-ops, new-grad roles) with
-resume-match framing and visa-sponsorship surfaced up front. **RoleVault** is the
-frontend design; the backend is a typed Express REST API.
+# 🟢 RoleVault
 
-This README is the single source of truth: architecture, configuration, the full
-API, and every way to run it.
+### The early-careers job board where the _match_ comes first.
+
+A full-stack platform for internships, co-ops, and new-grad roles — built so the
+two things candidates care about most, **how well a role fits** and **whether it
+sponsors a visa**, are surfaced before anything else.
+
+**RoleVault** is the polished React experience; behind it sits a clean, typed
+Express REST API that runs with **zero infrastructure** out of the box.
+
+<br/>
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-build-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![Node >=20](https://img.shields.io/badge/Node-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Tests](https://img.shields.io/badge/tests-Vitest-6E9F18?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Lint](https://img.shields.io/badge/lint-ESLint%20%2B%20Prettier-4B32C3?logo=eslint&logoColor=white)](https://eslint.org/)
+
+```bash
+npm install && npm run dev      # → http://localhost:5173
+```
+
+</div>
+
+---
+
+> [!NOTE]
+> **This README is the single source of truth.** Architecture, the data model,
+> the complete API, every environment variable, and every way to run the
+> stack — it's all here, and it's all verified against the code.
+
+### Why it's nice to work with
+
+|                                  |                                                                                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 🚀 **Runs in one command**       | `npm run dev` boots client + server with a seeded in-memory dataset — no database, no config, no `.env` required.                                            |
+| 🧱 **Clean layered backend**     | Routes → controllers → services → repositories, behind a single `JobRepository` interface. Swapping in-memory for Postgres is a one-line, env-driven change. |
+| 🎯 **Product-first framing**     | Resume-match scoring and visa-sponsorship are first-class concepts, surfaced up front in the UI.                                                             |
+| 🐘 **Postgres when you want it** | A full PostgreSQL path ships behind `DB_DRIVER` — `docker compose up` gives you a persistent, production-shaped stack.                                       |
+| 🧪 **Typed & tested end-to-end** | Strict TypeScript on both sides, Vitest + Testing Library on the client, supertest on the server, ESLint + Prettier across the monorepo.                     |
 
 ---
 
@@ -68,33 +106,36 @@ A full **PostgreSQL** path is implemented for persistence / production.
 ## 3. Tech stack
 
 ### Frontend (`client/`)
-| Concern | Choice |
-|---|---|
-| Language | TypeScript |
-| UI library | React 19 |
-| Build tool / dev server | Vite |
-| Styling | Tailwind CSS v4 (CSS-variable design tokens) + inline styles for the design screens |
-| Routing | React Router v7 (`react-router-dom`) |
-| Server state / fetching | TanStack Query (React Query) v5 |
-| Forms | React Hook Form |
-| Fonts | Schibsted Grotesk, Plus Jakarta Sans, Instrument Serif (Google Fonts) |
-| Tests | Vitest + Testing Library (jsdom) |
+
+| Concern                 | Choice                                                                              |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| Language                | TypeScript                                                                          |
+| UI library              | React 19                                                                            |
+| Build tool / dev server | Vite                                                                                |
+| Styling                 | Tailwind CSS v4 (CSS-variable design tokens) + inline styles for the design screens |
+| Routing                 | React Router v7 (`react-router-dom`)                                                |
+| Server state / fetching | TanStack Query (React Query) v5                                                     |
+| Forms                   | React Hook Form                                                                     |
+| Fonts                   | Schibsted Grotesk, Plus Jakarta Sans, Instrument Serif (Google Fonts)               |
+| Tests                   | Vitest + Testing Library (jsdom)                                                    |
 
 > Node.js runs the **build tooling** (Vite, npm). The output shipped to the
 > browser is static HTML/CSS/JS — no Node runs in the browser.
 
 ### Backend (`server/`)
-| Concern | Choice |
-|---|---|
-| Language | TypeScript |
-| Runtime | Node.js (>= 20) |
-| Web framework | Express 4 |
-| Database driver | `pg` (PostgreSQL) — used only in `postgres` mode |
-| Security / middleware | helmet, cors, morgan |
-| Dev runner | `tsx` (TypeScript execution + watch) |
-| Tests | Vitest + supertest |
+
+| Concern               | Choice                                           |
+| --------------------- | ------------------------------------------------ |
+| Language              | TypeScript                                       |
+| Runtime               | Node.js (>= 20)                                  |
+| Web framework         | Express 4                                        |
+| Database driver       | `pg` (PostgreSQL) — used only in `postgres` mode |
+| Security / middleware | helmet, cors, morgan                             |
+| Dev runner            | `tsx` (TypeScript execution + watch)             |
+| Tests                 | Vitest + supertest                               |
 
 ### Tooling (root)
+
 - npm **workspaces** for the monorepo
 - **concurrently** to run client + server together
 - **ESLint** (typescript-eslint) + **Prettier** (with Tailwind class sorting)
@@ -218,18 +259,18 @@ interface Job {
   id: string
   title: string
   company: string
-  location: string              // e.g. "San Francisco, US"
+  location: string // e.g. "San Francisco, US"
   remote: boolean
-  employmentType:               // one of:
+  employmentType: // one of:
     'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary'
   description: string
-  tags: string[]                // skills + the sponsorship convention (below)
+  tags: string[] // skills + the sponsorship convention (below)
   salaryMin: number | null
   salaryMax: number | null
-  currency: string              // ISO code, e.g. "USD", "GBP", "CAD"
+  currency: string // ISO code, e.g. "USD", "GBP", "CAD"
   status: 'open' | 'closed' | 'draft'
-  createdAt: string             // ISO timestamp
-  updatedAt: string             // ISO timestamp
+  createdAt: string // ISO timestamp
+  updatedAt: string // ISO timestamp
 }
 ```
 
@@ -277,18 +318,18 @@ default path never touches `pg`.
 
 ### Routes / screens
 
-| Path | Screen | Data | Notes |
-|---|---|---|---|
-| `/` | Landing (`HomePage`) | live | Dark hero, search, marquee, **real** recent postings + stats |
-| `/jobs` | Browse (`JobsPage`) | live | Filter sidebar (type, region, sponsorship, search) + table + pagination |
-| `/jobs/:id` | Job detail (`JobDetailPage`) | live | Single-job fetch; hero, overview, tags, role details |
-| `/jobs/new` | Post a job (`NewJobPage`) | live | Form → `POST /api/jobs` → redirect to the new job |
-| `/recommended` | Recommended (`RecommendedPage`) | live + illustrative | Real jobs, **illustrative** match score (banner says so) |
-| `/onboarding` | Resume upload (`OnboardingPage`) | static | Presentational (no resume backend) |
-| `/profile` | Account settings (`ProfilePage`) | static | Working tabs; presentational |
-| `/faq` | FAQ (`FaqPage`) | static | Working accordion |
-| `/login`, `/register` | Auth (`AuthPage`) | static | Presentational; advances the intended flow |
-| `*` | Not found (`NotFoundPage`) | — | Branded 404 |
+| Path                  | Screen                           | Data                | Notes                                                                   |
+| --------------------- | -------------------------------- | ------------------- | ----------------------------------------------------------------------- |
+| `/`                   | Landing (`HomePage`)             | live                | Dark hero, search, marquee, **real** recent postings + stats            |
+| `/jobs`               | Browse (`JobsPage`)              | live                | Filter sidebar (type, region, sponsorship, search) + table + pagination |
+| `/jobs/:id`           | Job detail (`JobDetailPage`)     | live                | Single-job fetch; hero, overview, tags, role details                    |
+| `/jobs/new`           | Post a job (`NewJobPage`)        | live                | Form → `POST /api/jobs` → redirect to the new job                       |
+| `/recommended`        | Recommended (`RecommendedPage`)  | live + illustrative | Real jobs, **illustrative** match score (banner says so)                |
+| `/onboarding`         | Resume upload (`OnboardingPage`) | static              | Presentational (no resume backend)                                      |
+| `/profile`            | Account settings (`ProfilePage`) | static              | Working tabs; presentational                                            |
+| `/faq`                | FAQ (`FaqPage`)                  | static              | Working accordion                                                       |
+| `/login`, `/register` | Auth (`AuthPage`)                | static              | Presentational; advances the intended flow                              |
+| `*`                   | Not found (`NotFoundPage`)       | —                   | Branded 404                                                             |
 
 **Layout split:** the in-app screens (`/jobs`, `/jobs/new`, `/recommended`,
 `/onboarding`, `/profile`, `/faq`) render inside `Layout`, which provides the
@@ -312,25 +353,25 @@ chrome.
 
 Base URL (dev): `http://localhost:4000/api`
 
-| Method | Path | Description | Body | Success |
-|---|---|---|---|---|
-| GET | `/health` | Liveness check | — | `200 {"status":"ok"}` |
-| GET | `/jobs` | List jobs (paginated) | — | `200` paginated envelope |
-| GET | `/jobs/:id` | Get one job | — | `200` Job, `404` if missing |
-| POST | `/jobs` | Create a job | `CreateJobInput` | `201` Job, `400` on validation error |
-| PATCH | `/jobs/:id` | Update a job | partial Job | `200` Job, `404` if missing |
-| DELETE | `/jobs/:id` | Delete a job | — | `204`, `404` if missing |
+| Method | Path        | Description           | Body             | Success                              |
+| ------ | ----------- | --------------------- | ---------------- | ------------------------------------ |
+| GET    | `/health`   | Liveness check        | —                | `200 {"status":"ok"}`                |
+| GET    | `/jobs`     | List jobs (paginated) | —                | `200` paginated envelope             |
+| GET    | `/jobs/:id` | Get one job           | —                | `200` Job, `404` if missing          |
+| POST   | `/jobs`     | Create a job          | `CreateJobInput` | `201` Job, `400` on validation error |
+| PATCH  | `/jobs/:id` | Update a job          | partial Job      | `200` Job, `404` if missing          |
+| DELETE | `/jobs/:id` | Delete a job          | —                | `204`, `404` if missing              |
 
 **`GET /jobs` query params** (all optional):
 
-| Param | Type | Effect |
-|---|---|---|
-| `search` | string | matches title / company / location / tags |
-| `employmentType` | enum | exact match |
-| `remote` | `true`/`false` | exact match |
-| `status` | `open`/`closed`/`draft` | exact match |
-| `page` | number | 1-based page |
-| `pageSize` | number | items per page (default 12, max 100) |
+| Param            | Type                    | Effect                                    |
+| ---------------- | ----------------------- | ----------------------------------------- |
+| `search`         | string                  | matches title / company / location / tags |
+| `employmentType` | enum                    | exact match                               |
+| `remote`         | `true`/`false`          | exact match                               |
+| `status`         | `open`/`closed`/`draft` | exact match                               |
+| `page`           | number                  | 1-based page                              |
+| `pageSize`       | number                  | items per page (default 12, max 100)      |
 
 **Examples**
 
@@ -380,14 +421,14 @@ DB_DRIVER=memory
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/job_posting
 ```
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `NODE_ENV` | `development` | runtime mode |
-| `HOST` | `0.0.0.0` | bind host |
-| `PORT` | `4000` | API port |
-| `CORS_ORIGIN` | `http://localhost:5173` | allowed origin(s) |
-| `DB_DRIVER` | `memory` | data source: `memory` or `postgres` |
-| `DATABASE_URL` | local pg URL | connection string (only when `postgres`) |
+| Variable       | Default                 | Purpose                                  |
+| -------------- | ----------------------- | ---------------------------------------- |
+| `NODE_ENV`     | `development`           | runtime mode                             |
+| `HOST`         | `0.0.0.0`               | bind host                                |
+| `PORT`         | `4000`                  | API port                                 |
+| `CORS_ORIGIN`  | `http://localhost:5173` | allowed origin(s)                        |
+| `DB_DRIVER`    | `memory`                | data source: `memory` or `postgres`      |
+| `DATABASE_URL` | local pg URL            | connection string (only when `postgres`) |
 
 ### `client/.env`
 
@@ -455,11 +496,11 @@ docker compose up --build
 
 Starts three containers:
 
-| Service | URL / Port | Notes |
-|---|---|---|
-| `db` (Postgres 16) | `localhost:5432` | persistent volume `db-data` |
+| Service            | URL / Port       | Notes                                                                 |
+| ------------------ | ---------------- | --------------------------------------------------------------------- |
+| `db` (Postgres 16) | `localhost:5432` | persistent volume `db-data`                                           |
 | `server` (Express) | `localhost:4000` | runs in **`postgres`** mode; auto-applies schema + seed on first boot |
-| `client` (nginx) | `localhost:5173` | static build served by nginx |
+| `client` (nginx)   | `localhost:5173` | static build served by nginx                                          |
 
 Open **http://localhost:5173**. Stop with `Ctrl+C`; tear down with
 `docker compose down` (add `-v` to also delete the database volume). In this
@@ -471,16 +512,16 @@ stack posted jobs **persist** across restarts (unlike `memory` mode).
 
 Run from the repository root unless noted.
 
-| Command | What it does |
-|---|---|
-| `npm run dev` | Run client + server concurrently (dev) |
-| `npm run dev:client` / `npm run dev:server` | Run one side |
-| `npm run build` | Build server then client for production |
-| `npm run start` | Start the compiled API (server only) |
-| `npm run typecheck` | Type-check both workspaces |
-| `npm run lint` / `npm run lint:fix` | ESLint across both workspaces |
-| `npm run test` | Run Vitest in both workspaces |
-| `npm run format` / `npm run format:check` | Prettier write / check |
+| Command                                     | What it does                            |
+| ------------------------------------------- | --------------------------------------- |
+| `npm run dev`                               | Run client + server concurrently (dev)  |
+| `npm run dev:client` / `npm run dev:server` | Run one side                            |
+| `npm run build`                             | Build server then client for production |
+| `npm run start`                             | Start the compiled API (server only)    |
+| `npm run typecheck`                         | Type-check both workspaces              |
+| `npm run lint` / `npm run lint:fix`         | ESLint across both workspaces           |
+| `npm run test`                              | Run Vitest in both workspaces           |
+| `npm run format` / `npm run format:check`   | Prettier write / check                  |
 
 Per-workspace (inside `client/` or `server/`): `npm run dev`, `build`,
 `typecheck`, `lint`, `test`.
