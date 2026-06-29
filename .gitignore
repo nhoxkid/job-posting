@@ -12,10 +12,9 @@ dist
 dist-ssr
 *.local
 
-# Env files
+# Env files (see README for the full contents to create these)
 .env
 .env.*
-!.env.example
 
 # TS build info
 *.tsbuildinfo
