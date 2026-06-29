@@ -17,7 +17,10 @@ services:
       retries: 5
 
   server:
-    build: ./server
+    # Built from the repo root so the workspace lockfile is in context (npm ci).
+    build:
+      context: .
+      dockerfile: server/Dockerfile
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -34,8 +37,10 @@ services:
         condition: service_healthy
 
   client:
+    # Built from the repo root so the workspace lockfile is in context (npm ci).
     build:
-      context: ./client
+      context: .
+      dockerfile: client/Dockerfile
       args:
         # Baked into the static bundle at build time; the browser calls the
         # API on the host-published port, not the internal compose network.
