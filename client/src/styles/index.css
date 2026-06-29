@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
 @import 'tailwindcss';
 
 /* Class-based dark mode: toggled by adding `.dark` to <html>. */
@@ -92,118 +93,13 @@
   }
 }
 
-/* ---------------------------------------------------------------------------
- * RoleVault helpers — display fonts, animations, and hover effects used by the
- * ported design screens (which rely on inline styles for exact fidelity).
- * ------------------------------------------------------------------------- */
-.rv-display {
-  font-family: 'Schibsted Grotesk', system-ui, sans-serif;
-}
-.rv-serif-i {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-style: italic;
-}
-
 @keyframes spr-up {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-@keyframes auroraA {
-  0% {
-    transform: translate(-8%, -6%) scale(1);
-  }
-  50% {
-    transform: translate(12%, 10%) scale(1.3);
-  }
-  100% {
-    transform: translate(-8%, -6%) scale(1);
-  }
-}
-@keyframes auroraB {
-  0% {
-    transform: translate(10%, 8%) scale(1.1);
-  }
-  50% {
-    transform: translate(-10%, -8%) scale(0.9);
-  }
-  100% {
-    transform: translate(10%, 8%) scale(1.1);
-  }
-}
-@keyframes floaty {
-  0% {
-    transform: translateY(0) rotate(var(--r, 0deg));
-  }
-  50% {
-    transform: translateY(-12px) rotate(var(--r, 0deg));
-  }
-  100% {
-    transform: translateY(0) rotate(var(--r, 0deg));
-  }
-}
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.rv-nav-link:hover {
-  color: #12805a !important;
-}
-.rv-nav-link-dark:hover {
-  color: #5fd6a0 !important;
-}
-.rv-footer-link:hover {
-  color: #5fd6a0 !important;
-}
-.rv-job-card:hover {
-  box-shadow: 0 22px 44px -18px rgba(10, 40, 28, 0.22) !important;
-  border-color: #bfe3d0 !important;
-  transform: translateY(-3px) !important;
-}
-.rv-table-row:hover {
-  background: #f6fbf8 !important;
-}
-.rv-rec-card:hover {
-  box-shadow: 0 22px 44px -18px rgba(10, 40, 28, 0.18) !important;
-  border-color: #bfe3d0 !important;
-  transform: translateY(-2px) !important;
-}
-.rv-faq-card:hover {
-  border-color: #bfe3d0 !important;
-}
-
-/* Dark-mode hover variants (the design screens are inline-styled, so these
- * hover effects can't use Tailwind tokens — override them under .dark). */
-.dark .rv-job-card:hover {
-  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.5) !important;
-  border-color: #2b6450 !important;
-}
-.dark .rv-table-row:hover {
-  background: #10342a !important;
-}
-.dark .rv-rec-card:hover {
-  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.45) !important;
-  border-color: #2b6450 !important;
-}
-.dark .rv-faq-card:hover {
-  border-color: #2b6450 !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
   }
 }
