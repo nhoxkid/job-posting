@@ -5,10 +5,9 @@
  * import `getPool()` (or `query()`) from here to run SQL. Nothing else in the
  * app should create a connection.
  *
- * Wiring it up later:
- *   1. Set DATABASE_URL in your .env (see .env.example).
- *   2. Call `connectToDatabase()` once on startup (already done in server.ts).
- *   3. Implement queries in the repositories using `query(...)`.
+ * Used only when DB_DRIVER=postgres. Set DATABASE_URL in your .env (see the
+ * README for the full env reference); `server.ts` calls `connectToDatabase()`
+ * on startup in that mode.
  */
 
 import { Pool, type QueryResult, type QueryResultRow } from 'pg'

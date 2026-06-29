@@ -1,18 +1,21 @@
 import { Outlet } from 'react-router-dom'
-import { Container } from './Container'
-import { Footer } from './Footer'
-import { Navbar } from './Navbar'
+import { RvNav } from './RvNav'
+import { usePalette } from '../../lib/palette'
 
+/** Shell for the in-app RoleVault screens: sticky nav + routed content. */
 export function Layout() {
+  const p = usePalette()
   return (
-    <div className="flex min-h-svh flex-col">
-      <Navbar />
-      <main className="flex-1 py-8">
-        <Container>
-          <Outlet />
-        </Container>
-      </main>
-      <Footer />
+    <div
+      style={{
+        background: p.pageBg,
+        minHeight: '100vh',
+        animation: 'spr-up .35s ease both',
+        transition: 'background .2s',
+      }}
+    >
+      <RvNav />
+      <Outlet />
     </div>
   )
 }

@@ -19,7 +19,10 @@ export const env = {
   // Comma-separated list of allowed origins, or `*`.
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
 
-  // SQL database connection. See src/db/index.ts.
+  // Data source: 'memory' (default, no database required) or 'postgres'.
+  dbDriver: (process.env.DB_DRIVER ?? 'memory') as 'memory' | 'postgres',
+
+  // SQL database connection. See src/db/index.ts. Only used when dbDriver is 'postgres'.
   databaseUrl: process.env.DATABASE_URL ?? '',
 
   // TODO: add API keys / secrets here as needed, e.g.

@@ -5,45 +5,51 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
- * Design tokens. Light theme on :root, dark overrides on .dark.
+ * Design tokens — "RoleVault" theme. Light on :root, dark overrides on .dark.
  * Mapped into Tailwind color utilities via @theme below
  * (e.g. `bg-background`, `text-foreground`, `bg-primary`).
  * ------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --muted: #f4f4f5;
-  --muted-foreground: #6b7280;
+  --background: #f6f8f5;
+  --foreground: #0a1410;
+  --muted: #eef2ef;
+  --muted-foreground: #6a7872;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #8b5cf6;
-  --primary: #7c3aed;
+  --card-foreground: #0a1410;
+  --border: #e6ece7;
+  --input: #e6ece7;
+  --ring: #12805a;
+  --primary: #12805a;
   --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --destructive: #dc2626;
+  --secondary: #e7f3ec;
+  --secondary-foreground: #12805a;
+  --destructive: #b23b32;
   --destructive-foreground: #ffffff;
-  --radius: 0.625rem;
+  --radius: 0.75rem;
+
+  /* RoleVault accent ramp (used by ported screens). */
+  --rv-ink: #0a1410;
+  --rv-green: #12805a;
+  --rv-green-bright: #5fd6a0;
+  --rv-deep: #08231a;
 }
 
 .dark {
-  --background: #0a0a0b;
-  --foreground: #fafafa;
-  --muted: #1c1c1f;
-  --muted-foreground: #9ca3af;
-  --card: #141416;
-  --card-foreground: #fafafa;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #a78bfa;
-  --primary: #a78bfa;
-  --primary-foreground: #0a0a0b;
-  --secondary: #1c1c1f;
-  --secondary-foreground: #fafafa;
-  --destructive: #ef4444;
-  --destructive-foreground: #0a0a0b;
+  --background: #08231a;
+  --foreground: #f1f7f4;
+  --muted: #10342a;
+  --muted-foreground: #9fb8ae;
+  --card: #0c2c22;
+  --card-foreground: #f1f7f4;
+  --border: #1c4334;
+  --input: #1c4334;
+  --ring: #5fd6a0;
+  --primary: #46c98a;
+  --primary-foreground: #06281d;
+  --secondary: #10342a;
+  --secondary-foreground: #bff3d8;
+  --destructive: #ef6a60;
+  --destructive-foreground: #1a0c0a;
 }
 
 @theme inline {
@@ -63,6 +69,9 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --radius-DEFAULT: var(--radius);
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Schibsted Grotesk', system-ui, sans-serif;
 }
 
 @layer base {
@@ -74,6 +83,7 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family:
+      'Plus Jakarta Sans',
       system-ui,
       -apple-system,
       'Segoe UI',
