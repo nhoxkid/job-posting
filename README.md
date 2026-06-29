@@ -208,7 +208,8 @@ job-posting/
 │       ├── app.ts                   # Express app factory (no port binding)
 │       └── server.ts                # Entrypoint (binds port, optional DB init)
 │
-├── docker-compose.yml               # postgres + server + client
+├── docker-compose.yml               # PROD stack: postgres + server + client (built images)
+├── docker-compose.dev.yml           # DEV stack: same services with bind-mounts + live reload
 ├── package.json                     # workspace root + orchestration scripts
 └── README.md                        # this file
 ```
@@ -511,9 +512,15 @@ npm run start        # runs the API from server/dist (SERVER ONLY)
 
 ### C. Docker (full stack with PostgreSQL)
 
-Requires Docker Desktop running. From the repository root:
+Requires Docker Desktop running. There are **two** compose files, each with an
+npm script shortcut (run from the repository root):
+
+**Production stack** — `docker-compose.yml` (built, optimized images):
 
 ```bash
+npm run docker:prod        # docker compose up -d --build  (detached)
+npm run docker:prod:down   # docker compose down
+# or directly, in the foreground:
 docker compose up --build
 ```
 
@@ -525,9 +532,26 @@ Starts three containers:
 | `server` (Express) | `localhost:4000` | runs in **`postgres`** mode; auto-applies schema + seed on first boot |
 | `client` (nginx)   | `localhost:5173` | static build served by nginx                                          |
 
-Open **http://localhost:5173**. Stop with `Ctrl+C`; tear down with
-`docker compose down` (add `-v` to also delete the database volume). In this
-stack posted jobs **persist** across restarts (unlike `memory` mode).
+Both `server` and `client` images are built from the **repo root** context so the
+workspace lockfile is available for a reproducible `npm ci`.
+
+Open **http://localhost:5173**. If you started it in the foreground stop with
+`Ctrl+C`; tear down with `npm run docker:prod:down` (or `docker compose down`,
+add `-v` to also delete the database volume). In this stack posted jobs
+**persist** across restarts (unlike `memory` mode).
+
+**Development stack** — `docker-compose.dev.yml` (source bind-mounted, hot reload):
+
+```bash
+npm run docker:dev         # docker compose -f docker-compose.dev.yml up
+npm run docker:dev:build   # same, forcing an image rebuild
+npm run docker:dev:down    # tear the dev stack down
+```
+
+This runs the same three services on a `node:20-alpine` base, mounts `./client`
+and `./server` into the containers, and runs the dev servers (Vite + `tsx watch`)
+so host edits hot-reload inside the containers. It uses a separate compose
+project name (`job-posting-dev`) so it can coexist with the production stack.
 
 ---
 
@@ -537,7 +561,8 @@ Run from the repository root unless noted.
 
 | Command                                     | What it does                            |
 | ------------------------------------------- | --------------------------------------- |
-| `npm run dev`                               | Run client + server concurrently (dev)  |
+| `npm run dev`                               | Run client + server concurrently (dev), via `concurrently` |
+| `npm run watch`                             | Alias for `npm run dev`                 |
 | `npm run dev:client` / `npm run dev:server` | Run one side                            |
 | `npm run build`                             | Build server then client for production |
 | `npm run start`                             | Start the compiled API (server only)    |
@@ -545,6 +570,8 @@ Run from the repository root unless noted.
 | `npm run lint` / `npm run lint:fix`         | ESLint across both workspaces           |
 | `npm run test`                              | Run Vitest in both workspaces           |
 | `npm run format` / `npm run format:check`   | Prettier write / check                  |
+| `npm run docker:prod` / `:down`             | Build + run (detached) / tear down the prod stack    |
+| `npm run docker:dev` / `:build` / `:down`   | Run / rebuild / tear down the dev (hot-reload) stack |
 
 Per-workspace (inside `client/` or `server/`): `npm run dev`, `build`,
 `typecheck`, `lint`, `test`.
