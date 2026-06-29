@@ -5,9 +5,19 @@
  * your database schema as you implement the repositories.
  */
 
-export type EmploymentType = 'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary'
+export const EMPLOYMENT_TYPES = [
+  'full-time',
+  'part-time',
+  'contract',
+  'internship',
+  'temporary',
+] as const
 
-export type JobStatus = 'open' | 'closed' | 'draft'
+export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number]
+
+export const JOB_STATUSES = ['open', 'closed', 'draft'] as const
+
+export type JobStatus = (typeof JOB_STATUSES)[number]
 
 /** A persisted job posting. */
 export interface Job {

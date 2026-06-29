@@ -4,45 +4,51 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
- * Design tokens. Light theme on :root, dark overrides on .dark.
+ * Design tokens — "RoleVault" theme. Light on :root, dark overrides on .dark.
  * Mapped into Tailwind color utilities via @theme below
  * (e.g. `bg-background`, `text-foreground`, `bg-primary`).
  * ------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --muted: #f4f4f5;
-  --muted-foreground: #6b7280;
+  --background: #f6f8f5;
+  --foreground: #0a1410;
+  --muted: #eef2ef;
+  --muted-foreground: #6a7872;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #8b5cf6;
-  --primary: #7c3aed;
+  --card-foreground: #0a1410;
+  --border: #e6ece7;
+  --input: #e6ece7;
+  --ring: #12805a;
+  --primary: #12805a;
   --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --destructive: #dc2626;
+  --secondary: #e7f3ec;
+  --secondary-foreground: #12805a;
+  --destructive: #b23b32;
   --destructive-foreground: #ffffff;
-  --radius: 0.625rem;
+  --radius: 0.75rem;
+
+  /* RoleVault accent ramp (used by ported screens). */
+  --rv-ink: #0a1410;
+  --rv-green: #12805a;
+  --rv-green-bright: #5fd6a0;
+  --rv-deep: #08231a;
 }
 
 .dark {
-  --background: #0a0a0b;
-  --foreground: #fafafa;
-  --muted: #1c1c1f;
-  --muted-foreground: #9ca3af;
-  --card: #141416;
-  --card-foreground: #fafafa;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #a78bfa;
-  --primary: #a78bfa;
-  --primary-foreground: #0a0a0b;
-  --secondary: #1c1c1f;
-  --secondary-foreground: #fafafa;
-  --destructive: #ef4444;
-  --destructive-foreground: #0a0a0b;
+  --background: #08231a;
+  --foreground: #f1f7f4;
+  --muted: #10342a;
+  --muted-foreground: #9fb8ae;
+  --card: #0c2c22;
+  --card-foreground: #f1f7f4;
+  --border: #1c4334;
+  --input: #1c4334;
+  --ring: #5fd6a0;
+  --primary: #46c98a;
+  --primary-foreground: #06281d;
+  --secondary: #10342a;
+  --secondary-foreground: #bff3d8;
+  --destructive: #ef6a60;
+  --destructive-foreground: #1a0c0a;
 }
 
 @theme inline {
@@ -62,6 +68,9 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --radius-DEFAULT: var(--radius);
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Schibsted Grotesk', system-ui, sans-serif;
 }
 
 @layer base {
@@ -72,12 +81,106 @@
     margin: 0;
     background-color: var(--background);
     color: var(--foreground);
-    font-family:
-      system-ui,
-      -apple-system,
-      'Segoe UI',
-      Roboto,
-      sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * RoleVault helpers — display fonts, animations, and hover effects used by the
+ * ported design screens (which rely on inline styles for exact fidelity).
+ * ------------------------------------------------------------------------- */
+.rv-display {
+  font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+}
+.rv-serif-i {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+}
+
+@keyframes spr-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes auroraA {
+  0% {
+    transform: translate(-8%, -6%) scale(1);
+  }
+  50% {
+    transform: translate(12%, 10%) scale(1.3);
+  }
+  100% {
+    transform: translate(-8%, -6%) scale(1);
+  }
+}
+@keyframes auroraB {
+  0% {
+    transform: translate(10%, 8%) scale(1.1);
+  }
+  50% {
+    transform: translate(-10%, -8%) scale(0.9);
+  }
+  100% {
+    transform: translate(10%, 8%) scale(1.1);
+  }
+}
+@keyframes floaty {
+  0% {
+    transform: translateY(0) rotate(var(--r, 0deg));
+  }
+  50% {
+    transform: translateY(-12px) rotate(var(--r, 0deg));
+  }
+  100% {
+    transform: translateY(0) rotate(var(--r, 0deg));
+  }
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.rv-nav-link:hover {
+  color: #12805a !important;
+}
+.rv-nav-link-dark:hover {
+  color: #5fd6a0 !important;
+}
+.rv-footer-link:hover {
+  color: #5fd6a0 !important;
+}
+.rv-job-card:hover {
+  box-shadow: 0 22px 44px -18px rgba(10, 40, 28, 0.22) !important;
+  border-color: #bfe3d0 !important;
+  transform: translateY(-3px) !important;
+}
+.rv-table-row:hover {
+  background: #f6fbf8 !important;
+}
+.rv-rec-card:hover {
+  box-shadow: 0 22px 44px -18px rgba(10, 40, 28, 0.18) !important;
+  border-color: #bfe3d0 !important;
+  transform: translateY(-2px) !important;
+}
+.rv-faq-card:hover {
+  border-color: #bfe3d0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

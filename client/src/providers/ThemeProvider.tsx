@@ -5,8 +5,9 @@ const STORAGE_KEY = 'theme'
 const MEDIA = '(prefers-color-scheme: dark)'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  // RoleVault is a light-only design (no dark toggle in the UI); default to light.
   const [theme, setThemeState] = useState<Theme>(
-    () => (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'system',
+    () => (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'light',
   )
   const [systemDark, setSystemDark] = useState(() => window.matchMedia(MEDIA).matches)
 

@@ -6,16 +6,22 @@
 import { createApp } from './app'
 import { env } from './config/env'
 import { closeDatabase, connectToDatabase } from './db'
+import { ensureSchemaAndSeed } from './repositories/seed'
 
 async function start(): Promise<void> {
-  // TODO: enable once DATABASE_URL is configured.
-  // await connectToDatabase()
-  void connectToDatabase
+  // Connect to PostgreSQL only when explicitly selected; the default
+  // in-memory driver needs no database.
+  if (env.dbDriver === 'postgres') {
+    await connectToDatabase()
+    await ensureSchemaAndSeed()
+  }
 
   const app = createApp()
 
   const server = app.listen(env.port, env.host, () => {
-    console.log(`API listening on http://${env.host}:${env.port} [${env.nodeEnv}]`)
+    console.log(
+      `API listening on http://${env.host}:${env.port} [${env.nodeEnv}] (db: ${env.dbDriver})`,
+    )
   })
 
   const shutdown = async (signal: string) => {
