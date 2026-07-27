@@ -6,6 +6,20 @@ import { usePalette } from '../../../lib/palette'
 
 type FeaturedHomeJob = (typeof featuredJobs)[number]
 
+/** One pass of the hero ticker. */
+const MARQUEE_COMPANIES = ['Northwind', 'Lumen', 'Vela', 'Quanta AI', 'Beacon', 'Forge', 'Acme Labs', 'Halcyon']
+
+/**
+ * How many times that list is repeated across the ticker track.
+ *
+ * The animation scrolls the track by exactly one copy, so the copies that stay
+ * on screen must span the viewport on their own: with N copies, the widest
+ * viewport the strip can fill is (N - 1) × copyWidth. One copy measures ~966px,
+ * so two copies leave a blank tail on anything wider than 966px — six covers
+ * past 4800px. The `-100 / N` shift below keeps the two in step.
+ */
+const MARQUEE_COPIES = 6
+
 export type LandingScreenProps = {
 	go: (s: RoleVaultScreen) => void
 	selectJob: (id?: number) => void
@@ -103,10 +117,15 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 				</div>
 
 				<div style={{ position: 'relative', zIndex: 2, borderTop: `1px solid ${p.heroBorder}`, padding: '18px 0', overflow: 'hidden', WebkitMaskImage: 'linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)', maskImage: 'linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)' }}>
-					<div style={{ display: 'flex', gap: 54, width: 'max-content', animation: 'marquee 28s linear infinite', whiteSpace: 'nowrap' }}>
-						{['Northwind', 'Lumen', 'Vela', 'Quanta AI', 'Beacon', 'Forge', 'Acme Labs', 'Halcyon', 'Northwind', 'Lumen', 'Vela', 'Quanta AI', 'Beacon', 'Forge', 'Acme Labs', 'Halcyon'].map((m, i) => (
-							<span key={i} style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 17, color: p.heroInkFaint }}>{m}</span>
-						))}
+					{/* The animation scrolls exactly one copy, so the seam never shows.
+					    Spacing is `margin-right` per item, not a row `gap` — see the
+					    `marquee` keyframes note in styles/index.css. */}
+					<div className='rv-marquee' style={{ display: 'flex', width: 'max-content', animation: 'marquee 28s linear infinite', whiteSpace: 'nowrap', willChange: 'transform', '--rv-marquee-shift': `${-100 / MARQUEE_COPIES}%` } as CSSProperties}>
+						{Array.from({ length: MARQUEE_COPIES }).flatMap((_, copy) =>
+							MARQUEE_COMPANIES.map((m, i) => (
+								<span key={`${copy}-${i}`} aria-hidden={copy > 0} style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 17, color: p.heroInkFaint, marginRight: 54 }}>{m}</span>
+							)),
+						)}
 					</div>
 				</div>
 			</section>

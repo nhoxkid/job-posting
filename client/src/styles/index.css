@@ -114,6 +114,37 @@
   }
 }
 
+/* Company ticker on the landing hero.
+ *
+ * The strip repeats its logo list N times and scrolls by exactly one copy, so
+ * every cycle ends on a pixel-identical frame and the loop is invisible. Two
+ * things make that hold:
+ *
+ *   - `--rv-marquee-shift` is `-100 / N`% — one copy's worth. LandingScreen
+ *     sets it from the same constant that decides how many copies to render, so
+ *     the two can't drift apart. N also has to be big enough that the copies
+ *     left on screen still span the viewport, or a blank tail appears.
+ *   - Each item carries its own trailing `margin-right` rather than the row
+ *     using `gap`. With `gap` the copies differ by one separator and the wrap
+ *     point visibly jumps.
+ *
+ * Runs shift → 0 so the logos travel left to right. */
+@keyframes marquee {
+  from {
+    transform: translateX(var(--rv-marquee-shift));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-marquee {
+    animation: none !important;
+    transform: translateX(var(--rv-marquee-shift));
+  }
+}
+
 @keyframes spr-up {
   from {
     opacity: 0;
