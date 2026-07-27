@@ -11,6 +11,27 @@
       rel="stylesheet"
     />
     <title>RoleVault — find internships that fit</title>
+    <!--
+      Apply the stored theme before first paint. React sets the same class in an
+      effect, which runs after the browser has already painted — without this a
+      dark-mode visitor sees a white flash on every reload. Reads the same
+      `theme` key and resolution rules as ThemeProvider; keep the two in step.
+    -->
+    <script>
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('theme')
+          if (stored !== 'light' && stored !== 'dark' && stored !== 'system') stored = 'system'
+          var dark =
+            stored === 'dark' ||
+            (stored === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.classList.toggle('dark', dark)
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+        } catch (e) {
+          /* Private mode / storage disabled — fall through to the light default. */
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -13,6 +13,7 @@ import {
 } from './features/rolevault/screens'
 import { featuredHomeJobs } from './features/jobs/rolevault'
 import type { RoleVaultScreen } from './features/rolevault/types'
+import { usePalette } from './lib/palette'
 
 type Screen = RoleVaultScreen
 
@@ -23,6 +24,7 @@ export default function RoleVault() {
 	const [detectedSkills, setDetectedSkills] = useState<string[]>(() => readDetectedSkills())
 	const [resumeName, setResumeName] = useState<string | null>(() => readResumeName())
 	const [recommendations, setRecommendations] = useState<any[]>([])
+	const palette = usePalette()
 
 	const go = (nextScreen: Screen) => {
 		setScreen(nextScreen)
@@ -47,15 +49,18 @@ export default function RoleVault() {
 
 	return (
 		<>
+			{/* Hover states read CSS variables (defined per theme in styles/index.css)
+			    because :hover can't be expressed as an inline style. */}
 			<style>{`
-				.rv-nav-link:hover { color: #1A7A52 !important; }
-				.rv-pill:hover { border-color: #1A7A52 !important; color: #15603F !important; }
-				.rv-job-card:hover { box-shadow: 0 10px 26px rgba(16,33,27,0.08) !important; border-color: #CDE3D6 !important; transform: translateY(-2px) !important; }
-				.rv-table-row:hover { background: #F7FBF8 !important; }
-				.rv-rec-card:hover { box-shadow: 0 10px 26px rgba(16,33,27,0.07) !important; border-color: #CDE3D6 !important; }
-				.rv-faq-card:hover { border-color: #CDE3D6 !important; }
+				.rv-nav-link:hover { color: var(--rv-hover-link) !important; }
+				.rv-nav-link-dark:hover { color: var(--rv-hover-nav-dark) !important; }
+				.rv-pill:hover { border-color: var(--rv-hover-pill-border) !important; color: var(--rv-hover-pill-ink) !important; }
+				.rv-job-card:hover { box-shadow: var(--rv-hover-card-shadow) !important; border-color: var(--rv-hover-card-border) !important; transform: translateY(-2px) !important; }
+				.rv-table-row:hover { background: var(--rv-hover-row) !important; }
+				.rv-rec-card:hover { box-shadow: var(--rv-hover-rec-shadow) !important; border-color: var(--rv-hover-card-border) !important; }
+				.rv-faq-card:hover { border-color: var(--rv-hover-card-border) !important; }
 			`}</style>
-			<div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: '#10211B', background: '#faf9f5', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
+			<div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: palette.ink, background: palette.pageBg, minHeight: '100vh', WebkitFontSmoothing: 'antialiased', transition: 'background 0.2s, color 0.2s' }}>
 				{screen === 'landing' && <LandingScreen go={go} selectJob={selectJob} featuredHomeJobs={featuredHomeJobs} />}
 				{screen === 'browse' && <BrowseScreen go={go} selectJob={selectJob} jobs={jobs} />}
 				{screen === 'detail' && <DetailScreen go={go} jobId={selectedJobId} />}

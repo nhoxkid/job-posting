@@ -32,6 +32,18 @@
   --rv-green: #12805a;
   --rv-green-bright: #5fd6a0;
   --rv-deep: #08231a;
+
+  /* Hover states for the inline-styled screens. These live in CSS (rather than
+   * the `usePalette` set) because they are :hover rules in a global <style>
+   * block, which inline styles can't express — see App.tsx. */
+  --rv-hover-link: #1a7a52;
+  --rv-hover-pill-border: #1a7a52;
+  --rv-hover-pill-ink: #15603f;
+  --rv-hover-card-shadow: 0 10px 26px rgba(16, 33, 27, 0.08);
+  --rv-hover-card-border: #cde3d6;
+  --rv-hover-row: #f7fbf8;
+  --rv-hover-rec-shadow: 0 10px 26px rgba(16, 33, 27, 0.07);
+  --rv-hover-nav-dark: #9fe9c4;
 }
 
 .dark {
@@ -50,6 +62,15 @@
   --secondary-foreground: #bff3d8;
   --destructive: #ef6a60;
   --destructive-foreground: #1a0c0a;
+
+  --rv-hover-link: #7ce7b0;
+  --rv-hover-pill-border: #46c98a;
+  --rv-hover-pill-ink: #9fe9c4;
+  --rv-hover-card-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+  --rv-hover-card-border: #2a6350;
+  --rv-hover-row: #10342a;
+  --rv-hover-rec-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+  --rv-hover-nav-dark: #9fe9c4;
 }
 
 @theme inline {
