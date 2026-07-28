@@ -11,11 +11,14 @@ import {
 	ProfileScreen,
 	RecommendedScreen,
 } from './features/rolevault/screens'
-import { featuredHomeJobs } from './features/jobs/rolevault'
 import type { RoleVaultScreen } from './features/rolevault/types'
 import { usePalette } from './lib/palette'
+import { useAuth } from './providers/auth-context'
 
 type Screen = RoleVaultScreen
+
+/** Screens that require a session. Anything else is browsable as a guest. */
+const PROTECTED_SCREENS: ReadonlySet<Screen> = new Set<Screen>(['recommended', 'profile'])
 
 export default function RoleVault() {
 	const [screen, setScreen] = useState<Screen>('landing')
@@ -25,11 +28,21 @@ export default function RoleVault() {
 	const [resumeName, setResumeName] = useState<string | null>(() => readResumeName())
 	const [recommendations, setRecommendations] = useState<any[]>([])
 	const palette = usePalette()
+	const { user, loading: authLoading } = useAuth()
 
 	const go = (nextScreen: Screen) => {
 		setScreen(nextScreen)
 		window.scrollTo(0, 0)
 	}
+
+	// Guard protected screens. The sign-in buttons already navigate only after a
+	// successful call, but this also covers signing out (or a session expiring)
+	// while a protected screen is open, and any direct jump to one.
+	//
+	// Derived rather than an effect so protected content never renders, even for
+	// a frame. `screen` is left untouched, so signing in returns you to it.
+	const needsAuth = PROTECTED_SCREENS.has(screen)
+	const visibleScreen: Screen = needsAuth && !user ? 'login' : screen
 
 	useEffect(() => {
 		fetchJobs().then((loadedJobs) => setJobs(loadedJobs))
@@ -61,15 +74,21 @@ export default function RoleVault() {
 				.rv-faq-card:hover { border-color: var(--rv-hover-card-border) !important; }
 			`}</style>
 			<div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: palette.ink, background: palette.pageBg, minHeight: '100vh', WebkitFontSmoothing: 'antialiased', transition: 'background 0.2s, color 0.2s' }}>
-				{screen === 'landing' && <LandingScreen go={go} selectJob={selectJob} featuredHomeJobs={jobs.slice(0, 6)} />}
-				{screen === 'browse' && <BrowseScreen go={go} selectJob={selectJob} jobs={jobs} />}
-				{screen === 'detail' && <DetailScreen go={go} jobId={selectedJobId} />}
-				{screen === 'login' && <AuthScreen mode='login' go={go} />}
-				{screen === 'register' && <AuthScreen mode='register' go={go} />}
-				{screen === 'onboarding' && <OnboardingScreen go={go} setDetectedSkills={setDetectedSkills} setResumeName={setResumeName} />}
-				{screen === 'recommended' && <RecommendedScreen go={go} recommendations={recommendations} selectJob={selectJob} resumeName={resumeName} />}
-				{screen === 'profile' && <ProfileScreen go={go} detectedSkills={detectedSkills} resumeName={resumeName} setDetectedSkills={setDetectedSkills} setResumeName={setResumeName} />}
-				{screen === 'faq' && <FaqScreen go={go} />}
+				{/* Hold protected screens until the session check settles, so a
+				    signed-in user is not bounced to login on a page refresh. */}
+				{needsAuth && authLoading ? null : (
+					<>
+						{visibleScreen === 'landing' && <LandingScreen go={go} selectJob={selectJob} featuredHomeJobs={jobs.slice(0, 6)} />}
+						{visibleScreen === 'browse' && <BrowseScreen go={go} selectJob={selectJob} jobs={jobs} />}
+						{visibleScreen === 'detail' && <DetailScreen go={go} jobId={selectedJobId} />}
+						{visibleScreen === 'login' && <AuthScreen mode='login' go={go} />}
+						{visibleScreen === 'register' && <AuthScreen mode='register' go={go} />}
+						{visibleScreen === 'onboarding' && <OnboardingScreen go={go} setDetectedSkills={setDetectedSkills} setResumeName={setResumeName} />}
+						{visibleScreen === 'recommended' && <RecommendedScreen go={go} recommendations={recommendations} selectJob={selectJob} resumeName={resumeName} />}
+						{visibleScreen === 'profile' && <ProfileScreen go={go} detectedSkills={detectedSkills} resumeName={resumeName} setDetectedSkills={setDetectedSkills} setResumeName={setResumeName} />}
+						{visibleScreen === 'faq' && <FaqScreen go={go} />}
+					</>
+				)}
 			</div>
 		</>
 	)

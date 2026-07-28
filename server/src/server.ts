@@ -40,4 +40,10 @@ async function start(): Promise<void> {
   process.on('SIGINT', () => void shutdown('SIGINT'))
 }
 
-void start()
+start().catch((err: unknown) => {
+  // Without this the process exits silently on a startup failure (e.g. a bad
+  // schema statement) *before* app.listen(), leaving the API unreachable with
+  // no obvious cause.
+  console.error('Failed to start server:', err)
+  process.exit(1)
+})

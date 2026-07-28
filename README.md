@@ -449,11 +449,21 @@ DB_DRIVER=memory
 # PostgreSQL (only used when DB_DRIVER=postgres)
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/job_posting
 
+<<<<<<< Updated upstream
 # AI summaries
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-3.6-flash
+=======
+# Auth: signs session JWTs. Generate with:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+SESSION_SECRET=
+
+# Auth: Google OAuth client id. Empty disables Google sign-in.
+GOOGLE_CLIENT_ID=
+>>>>>>> Stashed changes
 ```
 
+<<<<<<< Updated upstream
 | Variable | Default | Purpose |
 | :-- | :-- | :-- |
 | `NODE_ENV` | `development` | runtime mode |
@@ -462,14 +472,37 @@ GEMINI_MODEL=gemini-3.6-flash
 | `CORS_ORIGIN` | `http://localhost:5173` | allowed origin(s) |
 | `DB_DRIVER` | `memory` | data source: `memory` or `postgres` |
 | `DATABASE_URL` | local pg URL | connection string (only when `postgres`) |
+<<<<<<< Updated upstream
 | `GEMINI_API_KEY` | none                    | enables grounded job and company summaries   |
 | `GEMINI_MODEL`   | `gemini-3.6-flash`      | Gemini model used for summary generation     |
+=======
+=======
+| Variable           | Default                 | Purpose                                            |
+| ------------------ | ----------------------- | -------------------------------------------------- |
+| `NODE_ENV`         | `development`           | runtime mode                                        |
+| `HOST`             | `0.0.0.0`               | bind host                                           |
+| `PORT`             | `4000`                  | API port                                            |
+| `CORS_ORIGIN`      | `http://localhost:5173` | allowed origin(s); credentialed, so `*` is reflected |
+| `DB_DRIVER`        | `memory`                | data source: `memory` or `postgres`                 |
+| `DATABASE_URL`     | local pg URL            | connection string (only when `postgres`)            |
+| `SESSION_SECRET`   | random per run          | signs session JWTs; **required in production**       |
+| `SESSION_TTL_SECONDS` | `604800` (7 days)    | session lifetime and cookie max-age                 |
+| `GOOGLE_CLIENT_ID` | _(empty)_               | enables Google sign-in when set                     |
+
+Without `SESSION_SECRET` the server generates a random one at startup and warns —
+convenient in development, but sessions do not survive a restart. Production
+start-up **fails** without it rather than shipping a guessable signing key.
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
 ### `client/.env`
 
 ```ini
 # Base URL of the backend API (baked in at build time)
 VITE_API_BASE_URL=http://localhost:4000/api
+
+# Google OAuth client id; must match the server's GOOGLE_CLIENT_ID
+VITE_GOOGLE_CLIENT_ID=
 ```
 
 ### Root `.env` (only for `docker compose`)
@@ -610,6 +643,7 @@ Per-workspace (inside `client/` or `server/`): `npm run dev`, `build`, `typechec
 
 Intentional, given the current scope:
 
+<<<<<<< Updated upstream
 1. **No auth / accounts backend.** Login, Register, Onboarding, and Profile are
    presentational. Submitting login → Recommended, register → Onboarding.
 2. **No resume-matching backend.** Recommended shows **real** live jobs, but the match
@@ -623,6 +657,69 @@ Intentional, given the current scope:
    across every screen and persist to `/api/preferences`, but with no accounts backend the
    preference is stored against a single shared profile id (`default`); it becomes
    per-user once auth lands.
+=======
+1. **No password reset.** "Forgot password?" is still presentational — there is
+   no mail delivery, so no reset flow. Accounts themselves are real (see §16).
+2. **No resume-matching backend.** Recommended shows **real** live jobs but the
+   match percentage is **illustrative** (deterministic from the job id). A banner
+   states this.
+3. **`memory` mode is ephemeral.** Jobs posted in the default mode disappear on
+   restart. Use the Docker/Postgres path for persistence.
+4. **Sponsorship is a tag convention**, not a schema column (see §6).
+5. **Landing hero cards** (the three floating match cards) are decorative/fixed
+   sample content, matching the original design.
+6. **Theme persistence has no auth scope yet.** Light & dark modes are fully
+   themed across every screen and persist to `/api/preferences`, but the
+   preference is still stored against a single shared profile id (`default`)
+   rather than the signed-in user.
+
+---
+
+## 16. Authentication
+
+Accounts are real and enforced. A user signs in with email + password, with
+Google, or both.
+
+### Endpoints (`/api/auth`)
+
+| Route              | Method | Purpose                                            |
+| ------------------ | ------ | -------------------------------------------------- |
+| `/auth/config`     | GET    | whether Google sign-in is configured on this server |
+| `/auth/register`   | POST   | create an account (min 8-char password) and sign in |
+| `/auth/login`      | POST   | sign in with email + password                       |
+| `/auth/google`     | POST   | exchange a Google ID token for a session            |
+| `/auth/logout`     | POST   | clear the session cookie                            |
+| `/auth/me`         | GET    | the currently signed-in user (401 when anonymous)   |
+
+### Sessions
+
+The session is a signed JWT delivered in an **httpOnly** cookie (`rv_session`),
+so page scripts cannot read it. This is why `cors` runs with `credentials: true`
+and the client sends `credentials: 'include'` — and why a configured
+`CORS_ORIGIN=*` reflects the caller's origin instead, since the spec forbids
+pairing credentials with a wildcard.
+
+### Account rules
+
+- Passwords are hashed with bcrypt (cost 12). A hash never leaves the server.
+- Email is case-insensitive; `A@b.com` and `a@b.com` are one account.
+- Login answers `Invalid email or password` for both a wrong password and an
+  unknown address, and spends a comparison either way, so the form cannot be
+  used to discover who has an account.
+- Signing in with Google using an email that already has a password account
+  **links** the Google identity to that row rather than creating a duplicate.
+- Google ID tokens are verified against Google's keys and checked against our
+  client id; an unverified Google email is rejected.
+
+### Enabling Google sign-in
+
+1. Create an OAuth client id (Google Cloud Console → Credentials → OAuth client
+   ID → Web application) with `http://localhost:5173` as an authorised origin.
+2. Set `GOOGLE_CLIENT_ID` in `server/.env` and `VITE_GOOGLE_CLIENT_ID` in
+   `client/.env` to that same value.
+3. Restart both. Until then the button renders disabled and says so; the
+   endpoint answers `503` rather than failing obscurely.
+>>>>>>> Stashed changes
 
 ---
 

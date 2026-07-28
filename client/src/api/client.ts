@@ -38,6 +38,10 @@ async function request<T>(
       method,
       headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
+      // Send the httpOnly session cookie. The API runs on a different origin
+      // in development (:5173 → :4000), so without this it is omitted and
+      // every request looks anonymous.
+      credentials: 'include',
     })
   } catch {
     throw new Error('Network error — is the API server running?')

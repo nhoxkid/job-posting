@@ -1,5 +1,14 @@
+-- Schema for the job posting platform.
+--
+-- `ensureSchemaAndSeed()` (see repositories/seed.ts) runs this file on EVERY
+-- startup when DB_DRIVER=postgres, so every statement here MUST be safe to
+-- re-apply. Use `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS`,
+-- and add new columns to existing installs with `ALTER TABLE ... ADD COLUMN
+-- IF NOT EXISTS` rather than editing a CREATE TABLE body (which has no effect
+-- once the table exists).
+
 -- USERS table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     email VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -10,13 +19,40 @@ CREATE TABLE users (
         CHECK (role IN ('applicant', 'admin'))
 );
 
+-- USERS: auth columns.
+-- These are ALTERs rather than part of the CREATE TABLE above because that
+-- body is inert once the table exists, and existing installs already have one.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(64);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(100);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500);
+
+-- Google-only accounts have no password, so the hash must be optional.
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+
+-- 50 chars is too short for real addresses.
+ALTER TABLE users ALTER COLUMN email TYPE VARCHAR(255);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_users_google_id ON users (google_id);
+
+-- Every account must retain at least one way to sign in. Added conditionally:
+-- ADD CONSTRAINT has no IF NOT EXISTS.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_user_credentials') THEN
+        ALTER TABLE users ADD CONSTRAINT chk_user_credentials
+            CHECK (password_hash IS NOT NULL OR google_id IS NOT NULL);
+    END IF;
+END $$;
+
 -- JOB_POSTINGS table
-CREATE TABLE job_postings (
+CREATE TABLE IF NOT EXISTS job_postings (
     job_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     employer_name VARCHAR(100) NOT NULL,
     position VARCHAR(200) NOT NULL,
     job_type VARCHAR(20) NOT NULL DEFAULT 'internship',
-    job_location VARCHAR(200) NOT NULL,
+    -- TEXT, not VARCHAR: a posting can list many cities, and the joined value
+    -- runs past 200 characters in real listings.json data.
+    job_location TEXT NOT NULL,
     job_summary TEXT,
     company_summary TEXT,
     posting_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -43,8 +79,11 @@ CREATE TABLE job_postings (
         CHECK (number_of_applicants >= 0)
 );
 
+-- JOB_POSTINGS: widen job_location on installs created before it became TEXT.
+ALTER TABLE job_postings ALTER COLUMN job_location TYPE TEXT;
+
 -- SAVED_JOBS table
-CREATE TABLE saved_jobs (
+CREATE TABLE IF NOT EXISTS saved_jobs (
     saved_job_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     job_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -67,7 +106,7 @@ CREATE TABLE saved_jobs (
 );
 
 -- APPLICATION_TRACKER table
-CREATE TABLE application_tracker (
+CREATE TABLE IF NOT EXISTS application_tracker (
     tracker_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id BIGINT NOT NULL,
     job_id BIGINT NOT NULL,
@@ -90,10 +129,22 @@ CREATE TABLE application_tracker (
 );
 
 -- FAQ table
-CREATE TABLE faq (
+CREATE TABLE IF NOT EXISTS faq (
     faq_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     question VARCHAR(255) NOT NULL,
     answer TEXT NOT NULL,
     subject VARCHAR(100),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- USER_PREFERENCES table
+-- Keyed by a free-form profile id (currently the single shared 'default'
+-- profile; becomes the user id once accounts are wired up).
+CREATE TABLE IF NOT EXISTS user_preferences (
+    id VARCHAR(64) PRIMARY KEY,
+    theme VARCHAR(20) NOT NULL DEFAULT 'light',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_user_preferences_theme
+        CHECK (theme IN ('light', 'dark', 'system'))
 );
