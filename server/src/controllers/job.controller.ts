@@ -6,36 +6,97 @@
  * middleware (handlers are wrapped in `asyncHandler`).
  */
 
+
+
 import type { Request, Response } from 'express'
-import type { EmploymentType, JobQuery, JobStatus } from '../models/job'
+import {
+  EMPLOYMENT_TYPES,
+  JOB_STATUSES,
+  type EmploymentType,
+  type JobQuery,
+  type JobStatus,
+} from '../models/job'
 import { jobService } from '../services/job.service'
+import { ApiError } from '../utils/ApiError'
 
-/** Parse and coerce list query params from their string representations. */
-function parseListQuery(q: Request['query']): JobQuery {
-  const query: JobQuery = {}
+function firstQueryValue(value: unknown): string | undefined {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0]
+  return undefined
+}
 
-  if (typeof q.search === 'string' && q.search.trim()) query.search = q.search.trim()
-  if (typeof q.employmentType === 'string') query.employmentType = q.employmentType as EmploymentType
-  if (typeof q.status === 'string') query.status = q.status as JobStatus
-  if (typeof q.remote === 'string') query.remote = q.remote === 'true'
+function parsePositiveInteger(value: unknown, name: string, maximum?: number): number | undefined {
+  const text = firstQueryValue(value)
+  if (text === undefined || text.trim() === '') return undefined
 
-  const page = Number(q.page)
-  if (Number.isFinite(page) && page > 0) query.page = page
-  const pageSize = Number(q.pageSize)
-  if (Number.isFinite(pageSize) && pageSize > 0) query.pageSize = pageSize
+  const number = Number(text)
+  if (!Number.isInteger(number) || number < 1 || (maximum !== undefined && number > maximum)) {
+    const range = maximum === undefined ? 'a positive integer' : `an integer from 1 to ${maximum}`
+    throw ApiError.badRequest(`"${name}" must be ${range}`)
+  }
 
-  return query
+  return number
+}
+
+function parseRemote(value: unknown): boolean | undefined {
+  const text = firstQueryValue(value)
+  if (text === undefined || text.trim() === '') return undefined
+  if (text === 'true') return true
+  if (text === 'false') return false
+  throw ApiError.badRequest('"remote" must be either true or false')
+}
+
+function parseEmploymentType(value: unknown): EmploymentType | undefined {
+  const text = firstQueryValue(value)
+  if (text === undefined || text.trim() === '') return undefined
+
+  if (!EMPLOYMENT_TYPES.includes(text as EmploymentType)) {
+    throw ApiError.badRequest(
+      `"employmentType" must be one of: ${EMPLOYMENT_TYPES.join(', ')}`,
+    )
+  }
+
+  return text as EmploymentType
+}
+
+function parseStatus(value: unknown): JobStatus | undefined {
+  const text = firstQueryValue(value)
+  if (text === undefined || text.trim() === '') return undefined
+
+  if (!JOB_STATUSES.includes(text as JobStatus)) {
+    throw ApiError.badRequest(`"status" must be one of: ${JOB_STATUSES.join(', ')}`)
+  }
+
+  return text as JobStatus
+}
+
+function parseJobQuery(req: Request): JobQuery {
+  const search = firstQueryValue(req.query.search)?.trim()
+  const employmentType = parseEmploymentType(req.query.employmentType)
+  const remote = parseRemote(req.query.remote)
+  const status = parseStatus(req.query.status)
+  const page = parsePositiveInteger(req.query.page, 'page')
+  const pageSize = parsePositiveInteger(req.query.pageSize, 'pageSize', 100)
+
+  return {
+    ...(search ? { search } : {}),
+    ...(employmentType !== undefined ? { employmentType } : {}),
+    ...(remote !== undefined ? { remote } : {}),
+    ...(status !== undefined ? { status } : {}),
+    ...(page !== undefined ? { page } : {}),
+    ...(pageSize !== undefined ? { pageSize } : {}),
+  }
 }
 
 export const jobController = {
   list: async (req: Request, res: Response): Promise<void> => {
-    const result = await jobService.list(parseListQuery(req.query))
-    res.json(result)
+    const result = await jobService.list(parseJobQuery(req))
+    res.status(200).json(result)
   },
 
   getById: async (req: Request, res: Response): Promise<void> => {
     const job = await jobService.getById(req.params.id)
-    res.json(job)
+    res.status(200).json(job)
   },
 
   create: async (req: Request, res: Response): Promise<void> => {
@@ -45,11 +106,11 @@ export const jobController = {
 
   update: async (req: Request, res: Response): Promise<void> => {
     const job = await jobService.update(req.params.id, req.body)
-    res.json(job)
+    res.status(200).json(job)
   },
 
   remove: async (req: Request, res: Response): Promise<void> => {
     await jobService.remove(req.params.id)
-    res.status(204).end()
+    res.status(204).send()
   },
 }
