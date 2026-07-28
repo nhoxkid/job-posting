@@ -1,5 +1,6 @@
 import type { RoleVaultScreen } from '../../features/rolevault/types'
 import { usePalette } from '../../lib/palette'
+import { Clickable } from '../../components/ui/Clickable'
 import { ThemeToggle } from '../ui/ThemeToggle'
 
 export const Logo = ({ size = 26 }: { size?: number }) => {
@@ -13,19 +14,19 @@ export const NavBar = ({ screen, go, variant = 'default' }: { screen: RoleVaultS
 	const p = usePalette()
 	if (variant === 'auth') return null
 	return (
-		<div style={{ position: 'sticky', top: 0, zIndex: 40, background: p.navBg, backdropFilter: 'blur(8px)', borderBottom: `1px solid ${p.borderSubtle}` }}>
+		<div style={{ position: 'sticky', top: 0, zIndex: 40, background: p.navBg, WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${p.borderSubtle}` }}>
 			<div style={{ maxWidth: 1180, margin: '0 auto', padding: '15px 28px', display: 'flex', alignItems: 'center', gap: 30 }}>
-				<div onClick={() => go('landing')} style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer' }}>
+				<Clickable as='div' onClick={() => go('landing')} label='RoleVault home' style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
 					<Logo />
 					<span style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 21, letterSpacing: '-0.02em', color: p.ink }}>RoleVault</span>
-				</div>
+				</Clickable>
 				<nav style={{ display: 'flex', gap: 26, alignItems: 'center', marginLeft: 8 }}>
 					{(['browse', 'recommended', 'faq'] as const).map((item) => {
 						const labels: Record<string, string> = { browse: 'Browse', recommended: 'Recommended', faq: 'FAQ' }
 						return (
-							<span key={item} onClick={() => go(item)} className="v1-nav-link" style={{ fontWeight: screen === item ? 700 : 600, fontSize: 15, color: screen === item ? p.ink : p.body, cursor: 'pointer' }}>
+							<Clickable key={item} onClick={() => go(item)} className='rv-nav-link' style={{ fontWeight: screen === item ? 700 : 600, fontSize: 15, color: screen === item ? p.ink : p.body }}>
 								{labels[item]}
-							</span>
+							</Clickable>
 						)
 					})}
 				</nav>

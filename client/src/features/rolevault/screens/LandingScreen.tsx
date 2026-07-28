@@ -1,10 +1,14 @@
 import type { RoleVaultScreen } from '../types'
 import type { CSSProperties } from 'react'
-import { featuredHomeJobs as featuredJobs } from '../../jobs/rolevault'
+import { companyInitials } from '../../jobs/rolevault'
+import { formatRelativeTime } from '../../../lib/format'
+import type { Job } from '../../../types/job'
+import { Clickable } from '../../../components/ui/Clickable'
+import { SponsorshipBadge } from '../../../components/ui/SponsorshipBadge'
 import { ThemeToggle } from '../../../components/ui/ThemeToggle'
 import { usePalette } from '../../../lib/palette'
 
-type FeaturedHomeJob = (typeof featuredJobs)[number]
+
 
 /** One pass of the hero ticker. */
 const MARQUEE_COMPANIES = ['Northwind', 'Lumen', 'Vela', 'Quanta AI', 'Beacon', 'Forge', 'Acme Labs', 'Halcyon']
@@ -22,8 +26,8 @@ const MARQUEE_COPIES = 6
 
 export type LandingScreenProps = {
 	go: (s: RoleVaultScreen) => void
-	selectJob: (id?: number) => void
-	featuredHomeJobs: FeaturedHomeJob[]
+	selectJob: (id?: string) => void
+	featuredHomeJobs: Job[]
 }
 
 export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreenProps) {
@@ -37,24 +41,24 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 				<div aria-hidden='true' style={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(${p.heroDot} 1px,transparent 1.3px)`, backgroundSize: '28px 28px', WebkitMaskImage: 'radial-gradient(ellipse 90% 80% at 40% 30%,#000 30%,transparent 80%)', maskImage: 'radial-gradient(ellipse 90% 80% at 40% 30%,#000 30%,transparent 80%)' }} />
 
 				<div style={{ position: 'relative', zIndex: 3, maxWidth: 1180, margin: '0 auto', padding: '22px 28px', display: 'flex', alignItems: 'center', gap: 30 }}>
-					<div onClick={() => go('landing')} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+					<Clickable as='div' onClick={() => go('landing')} label='RoleVault home' style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
 						<div style={{ width: 30, height: 30, borderRadius: '6px 16px 6px 16px', background: p.logoGradient, boxShadow: '0 4px 14px rgba(20,148,104,0.45),inset 0 1px 0 rgba(255,255,255,0.3)' }} />
 						<span style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em', color: p.heroInk }}>RoleVault</span>
-					</div>
+					</Clickable>
 					<nav style={{ display: 'flex', gap: 26, alignItems: 'center', marginLeft: 6 }}>
-						<span onClick={() => go('browse')} className='rv-nav-link-dark' style={{ fontWeight: 600, fontSize: 15, color: p.heroInkMuted, cursor: 'pointer' }}>Browse</span>
-						<span onClick={() => go('faq')} className='rv-nav-link-dark' style={{ fontWeight: 600, fontSize: 15, color: p.heroInkMuted, cursor: 'pointer' }}>FAQ</span>
+						<Clickable onClick={() => go('browse')} className='rv-nav-link-dark' style={{ fontWeight: 600, fontSize: 15, color: p.heroInkMuted }}>Browse</Clickable>
+						<Clickable onClick={() => go('faq')} className='rv-nav-link-dark' style={{ fontWeight: 600, fontSize: 15, color: p.heroInkMuted }}>FAQ</Clickable>
 					</nav>
 					<div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
 						<ThemeToggle variant='onDark' />
-						<button onClick={() => go('login')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 600, fontSize: 15, color: p.heroInk, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, borderRadius: 11, padding: '10px 18px', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>Log In</button>
+						<button onClick={() => go('login')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 600, fontSize: 15, color: p.heroInk, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, borderRadius: 11, padding: '10px 18px', cursor: 'pointer', WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }}>Log In</button>
 						<button onClick={() => go('register')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 700, fontSize: 15, color: p.buttonInk, background: p.buttonGradient, border: 'none', borderRadius: 11, padding: '11px 20px', cursor: 'pointer', boxShadow: p.buttonShadow }}>Sign up</button>
 					</div>
 				</div>
 
 				<div style={{ position: 'relative', zIndex: 2, maxWidth: 1180, margin: '0 auto', padding: '46px 28px 64px', display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: 40, alignItems: 'center' }}>
 					<div>
-						<div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, color: p.heroAccent, fontWeight: 600, fontSize: 13, padding: '7px 15px', borderRadius: 999, marginBottom: 26, backdropFilter: 'blur(8px)' }}>
+						<div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, color: p.heroAccent, fontWeight: 600, fontSize: 13, padding: '7px 15px', borderRadius: 999, marginBottom: 26, WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }}>
 							<span style={{ width: 7, height: 7, background: p.heroGlow, borderRadius: '50%', boxShadow: `0 0 10px ${p.heroGlow}`, display: 'inline-block' }} />
 							Built for students &amp; new grads
 						</div>
@@ -64,7 +68,7 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 						</h1>
 						<p style={{ fontSize: 18, lineHeight: 1.55, color: p.heroInkMuted, maxWidth: 480, margin: '0 0 30px' }}>RoleVault ranks every opening by how well it matches your resume — and flags visa sponsorship up front, so you never apply blind.</p>
 						<div style={{ display: 'flex', gap: 10, maxWidth: 560 }}>
-							<div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 11, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, borderRadius: 14, padding: '0 16px', backdropFilter: 'blur(14px)' }}>
+							<div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 11, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, borderRadius: 14, padding: '0 16px', WebkitBackdropFilter: 'blur(14px)', backdropFilter: 'blur(14px)' }}>
 								<span style={{ color: p.heroInkFaint, fontSize: 17 }}>⚲</span>
 								<input placeholder='Search roles, companies, skills...' style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', color: p.heroInk, fontSize: 15, fontFamily: "'Plus Jakarta Sans'", padding: '16px 0' }} />
 							</div>
@@ -72,7 +76,7 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 						</div>
 						<div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
 							{['Sponsors visas', 'Remote', 'Internship', 'New Grad'].map((tag, i) => (
-								<span key={tag} onClick={() => go('browse')} style={{ fontWeight: 600, fontSize: 13, color: i === 0 ? p.buttonInk : p.heroInkMuted, background: i === 0 ? p.heroGlow : p.heroChipBg, border: i === 0 ? 'none' : `1px solid ${p.heroBorder}`, borderRadius: 999, padding: '7px 14px', cursor: 'pointer' }}>{tag}</span>
+								<Clickable key={tag} onClick={() => go('browse')} label={`Browse ${tag} roles`} className={i === 0 ? 'rv-hero-tag-active' : 'rv-hero-tag'} style={{ fontWeight: 600, fontSize: 13, color: i === 0 ? p.buttonInk : p.heroInkMuted, background: i === 0 ? p.heroGlow : p.heroChipBg, border: i === 0 ? 'none' : `1px solid ${p.heroBorder}`, borderRadius: 999, padding: '7px 14px' }}>{tag}</Clickable>
 							))}
 						</div>
 						<div style={{ display: 'flex', gap: 30, marginTop: 36 }}>
@@ -88,14 +92,14 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 						<div aria-hidden='true' style={{ position: 'absolute', top: 60, left: 30, width: 340, height: 340, borderRadius: '50%', background: 'radial-gradient(circle,rgba(95,214,160,0.32),transparent 65%)', filter: 'blur(20px)' }} />
 						{featuredHomeJobs.slice(0, 3).map((job, index) => {
 							const cardLayout = [
-								{ top: 10, right: 8, left: undefined, width: 318, delay: '0s', match: 94, spons: true },
-								{ top: 190, left: 0, right: undefined, width: 294, delay: '0.5s', match: 88, spons: false },
-								{ top: 334, right: 34, left: undefined, width: 286, delay: '0.9s', match: 71, spons: false },
+								{ top: 10, right: 8, left: undefined, width: 318, delay: '0s', match: 94 },
+								{ top: 190, left: 0, right: undefined, width: 294, delay: '0.5s', match: 88 },
+								{ top: 334, right: 34, left: undefined, width: 286, delay: '0.9s', match: 71 },
 							][index]
 							return (
-								<div key={job.id} onClick={() => selectJob(job.id)} style={{ position: 'absolute', top: cardLayout.top, right: cardLayout.right, left: cardLayout.left, width: cardLayout.width, cursor: 'pointer', background: p.floatCardBg, color: p.ink, borderRadius: 20, padding: 18, boxShadow: cardLayout.match === 94 ? `0 36px 70px -22px rgba(0,0,0,0.6),0 0 0 2px ${p.heroGlow}` : '0 36px 70px -24px rgba(0,0,0,0.55)', animation: `floaty 6.5s ease-in-out infinite ${cardLayout.delay}` } as CSSProperties}>
+								<Clickable as='div' key={job.id} onClick={() => selectJob(job.id)} label={`View ${job.title} at ${job.company}`} style={{ position: 'absolute', top: cardLayout.top, right: cardLayout.right, left: cardLayout.left, width: cardLayout.width, background: p.floatCardBg, color: p.ink, borderRadius: 20, padding: 18, boxShadow: cardLayout.match === 94 ? `0 36px 70px -22px rgba(0,0,0,0.6),0 0 0 2px ${p.heroGlow}` : '0 36px 70px -24px rgba(0,0,0,0.55)', animation: `floaty 6.5s ease-in-out infinite ${cardLayout.delay}` } as CSSProperties}>
 									<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-										<div style={{ width: 44, height: 44, borderRadius: 12, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 15 }}>{job.initials}</div>
+										<div style={{ width: 44, height: 44, borderRadius: 12, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 15 }}>{companyInitials(job.company)}</div>
 										<div style={{ flex: 1, minWidth: 0 }}>
 											<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 15 }}>{job.title}</div>
 											<div style={{ fontSize: 12.5, color: p.muted }}>{job.company} · {job.loc}</div>
@@ -107,10 +111,10 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 									</div>
 									<div style={{ height: 6, borderRadius: 999, background: p.chipBg, marginTop: 14, overflow: 'hidden' }}><div style={{ width: `${cardLayout.match}%`, height: '100%', background: p.matchBarFill }} /></div>
 									<div style={{ display: 'flex', gap: 6, marginTop: 13 }}>
-										{cardLayout.spons ? <span style={{ fontSize: 11, fontWeight: 600, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '3px 9px' }}>✓ Sponsors</span> : <span style={{ fontSize: 11, fontWeight: 600, color: p.body, background: p.chipBg, borderRadius: 999, padding: '3px 9px' }}>No sponsorship</span>}
+										<SponsorshipBadge sponsorship={job.sponsorship} short />
 										<span style={{ fontSize: 11, fontWeight: 600, color: p.body, background: p.chipBg, borderRadius: 999, padding: '3px 9px' }}>{job.type}</span>
 									</div>
-								</div>
+								</Clickable>
 							)
 						})}
 					</div>
@@ -141,19 +145,19 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 					</div>
 					<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
 						{featuredHomeJobs.map((j) => (
-							<div key={j.id} onClick={() => selectJob(j.id)} className='rv-job-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 18, padding: 20, cursor: 'pointer', transition: 'box-shadow .18s,border-color .18s,transform .18s' }}>
+							<Clickable as='div' key={j.id} onClick={() => selectJob(j.id)} label={`View ${j.title} at ${j.company}`} className='rv-job-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 18, padding: 20, transition: 'box-shadow .18s,border-color .18s,transform .18s' }}>
 								<div style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
-									<div style={{ width: 46, height: 46, flexShrink: 0, borderRadius: 13, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 15 }}>{j.initials}</div>
+									<div style={{ width: 46, height: 46, flexShrink: 0, borderRadius: 13, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 15 }}>{companyInitials(j.company)}</div>
 									<div style={{ minWidth: 0 }}>
 										<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 16.5, lineHeight: 1.25, color: p.ink }}>{j.title}</div>
 										<div style={{ fontSize: 13, color: p.muted, marginTop: 3 }}>{j.company} · {j.loc}</div>
 									</div>
 								</div>
 								<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
-									{j.spons ? <span style={{ fontWeight: 600, fontSize: 12, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '5px 11px' }}>✓ Sponsors visa</span> : <span style={{ fontWeight: 600, fontSize: 12, color: p.muted, background: p.chipBg, borderRadius: 999, padding: '5px 11px' }}>No sponsorship</span>}
-									<span style={{ fontSize: 12.5, color: p.muted }}>{j.time}</span>
+									<SponsorshipBadge sponsorship={j.sponsorship} />
+									<span style={{ fontSize: 12.5, color: p.muted }}>{formatRelativeTime(j.postedAt)}</span>
 								</div>
-							</div>
+							</Clickable>
 						))}
 					</div>
 				</div>
@@ -193,18 +197,31 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 					</div>
 					<div>
 						<div style={{ fontWeight: 700, fontSize: 13, letterSpacing: '0.05em', textTransform: 'uppercase', color: p.heroInkFaint, marginBottom: 14 }}>Product</div>
-						<div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14, color: p.heroInkMuted }}>
-							<span onClick={() => go('browse')} className='rv-footer-link' style={{ cursor: 'pointer' }}>Browse jobs</span>
-							<span onClick={() => go('recommended')} className='rv-footer-link' style={{ cursor: 'pointer' }}>Recommended</span>
-							<span onClick={() => go('onboarding')} className='rv-footer-link' style={{ cursor: 'pointer' }}>Resume matching</span>
+						{/* `align-items: flex-start` keeps each link's box as wide as its
+						    text. Without it these flex children stretch to the column's
+						    full width and the hover state fires far to the right of the
+						    words. */}
+						<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, fontSize: 14, color: p.heroInkMuted }}>
+							<Clickable onClick={() => go('browse')} className='rv-footer-link'>Browse jobs</Clickable>
+							<Clickable onClick={() => go('recommended')} className='rv-footer-link'>Recommended</Clickable>
+							<Clickable onClick={() => go('onboarding')} className='rv-footer-link'>Resume matching</Clickable>
 						</div>
 					</div>
 					<div>
 						<div style={{ fontWeight: 700, fontSize: 13, letterSpacing: '0.05em', textTransform: 'uppercase', color: p.heroInkFaint, marginBottom: 14 }}>Company</div>
-						<div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14, color: p.heroInkMuted }}>
-							<span className='rv-footer-link' style={{ cursor: 'pointer' }}>About</span>
-							<span className='rv-footer-link' style={{ cursor: 'pointer' }}>Careers</span>
-							<span onClick={() => go('faq')} className='rv-footer-link' style={{ cursor: 'pointer' }}>FAQ</span>
+						{/* `align-items: flex-start` keeps each link's box as wide as its
+						    text. Without it these flex children stretch to the column's
+						    full width and the hover state fires far to the right of the
+						    words. */}
+						<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, fontSize: 14, color: p.heroInkMuted }}>
+							{/* There are no dedicated About/Careers screens in
+							    RoleVaultScreen yet, so these point at the closest existing
+							    ones: company background lives in the FAQ, and RoleVault's
+							    own openings are just listings. Repoint them when those
+							    pages exist. */}
+							<Clickable onClick={() => go('faq')} className='rv-footer-link'>About</Clickable>
+							<Clickable onClick={() => go('browse')} className='rv-footer-link'>Careers</Clickable>
+							<Clickable onClick={() => go('faq')} className='rv-footer-link'>FAQ</Clickable>
 						</div>
 					</div>
 					<div>

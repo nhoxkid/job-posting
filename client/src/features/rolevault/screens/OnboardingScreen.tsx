@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Logo } from '../../../components/layout/RoleVaultChrome'
+import { Clickable } from '../../../components/ui/Clickable'
 import { ThemeToggle } from '../../../components/ui/ThemeToggle'
 import { usePalette } from '../../../lib/palette'
 import { inferResumeSkills, parseResumeSkills, readDetectedSkills, readFileAsText, readResumeName } from '../../jobs/rolevault'
@@ -96,12 +97,12 @@ export function OnboardingScreen({ go, setDetectedSkills, setResumeName }: Onboa
 
 	return (
 		<div style={{ animation: 'spr-up .35s ease both', background: p.pageBg, color: p.ink, minHeight: '100vh' }}>
-			<div style={{ position: 'sticky', top: 0, zIndex: 40, background: p.navBg, backdropFilter: 'blur(8px)', borderBottom: `1px solid ${p.borderSubtle}` }}>
+			<div style={{ position: 'sticky', top: 0, zIndex: 40, background: p.navBg, WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${p.borderSubtle}` }}>
 				<div style={{ maxWidth: 840, margin: '0 auto', padding: '15px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-					<div onClick={() => go('landing')} style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer' }}>
+					<Clickable as='div' onClick={() => go('landing')} label='RoleVault home' style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
 						<Logo />
 						<span style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 21, letterSpacing: '-0.02em', color: p.ink }}>RoleVault</span>
-					</div>
+					</Clickable>
 					<div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
 						<ThemeToggle />
 						<button onClick={() => go('profile')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 600, fontSize: 15, color: p.accent, background: p.surface, border: `1.5px solid ${p.accentBorder}`, borderRadius: 10, padding: '9px 18px', cursor: 'pointer' }}>My Profile</button>

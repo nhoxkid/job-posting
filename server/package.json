@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ingest": "tsx src/ingest/cli.ts",
+    "db:setup": "tsx src/db/setup.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

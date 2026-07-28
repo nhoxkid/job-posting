@@ -1,0 +1,275 @@
+/**
+ * Turns a provider's `RawJob` into the canonical `Job` shape.
+ *
+ * Every source describes postings differently — "Software Engineer Intern
+ * (Summer 2026)" from one, "Intern, Software Engineering" from another, and
+ * locations ranging from "Remote - US" to "Toronto, ON, Canada". Normalising in
+ * one place is what makes cross-source de-duplication possible at all: two
+ * providers only produce the same fingerprint if they first agree on what the
+ * company, title and location *are*.
+ */
+
+import { createHash } from 'node:crypto'
+import type { Job, JobType, Region, Sponsorship, WorkModel } from '../models/job'
+import type { RawJob } from './types'
+
+/* -------------------------------------------------------------------------- */
+/* Text helpers                                                               */
+/* -------------------------------------------------------------------------- */
+
+/** Strip HTML tags and collapse entities/whitespace into readable plain text. */
+export function htmlToText(input: string): string {
+  return input
+    .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&(quot|#34);/g, '"')
+    .replace(/&(apos|#39);/g, "'")
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+/**
+ * Aggressive normalisation used only for identity comparison.
+ *
+ * Lowercases, drops punctuation and collapses spaces so that
+ * "Acme Labs, Inc." and "acme labs inc" resolve to the same company.
+ */
+function identityKey(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\b(inc|llc|ltd|limited|corp|corporation|co|gmbh|plc|the)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/* -------------------------------------------------------------------------- */
+/* Classification                                                             */
+/* -------------------------------------------------------------------------- */
+
+const INTERN_PATTERN = /\b(intern|internship|industrial placement|summer analyst)\b/i
+const COOP_PATTERN = /\b(co-?op)\b/i
+// `graduate` needs the qualifier — a bare "Graduate" also appears in senior
+// postings ("graduate degree required") — but the qualifier is often separated
+// by the discipline, as in "Graduate Software Developer".
+const NEW_GRAD_PATTERN =
+  /\b(new ?grad|graduate\s+(\w+\s+){0,2}(program|scheme|role|engineer|developer|analyst|scientist)|entry[- ]level|university grad|campus hire|early career)\b/i
+
+/**
+ * Which early-careers bucket a posting belongs to, or null to reject it.
+ *
+ * RoleVault only lists early-careers roles, so anything that reads as senior is
+ * dropped here rather than being stored and filtered later. Order matters:
+ * "Co-op" is checked before "Intern" because co-op postings routinely say both.
+ */
+export function classifyJobType(title: string, hint?: string): JobType | null {
+  const haystack = `${title} ${hint ?? ''}`
+
+  if (/\b(senior|staff|principal|lead|manager|director|head of|vp|phd)\b/i.test(title)) return null
+
+  if (COOP_PATTERN.test(haystack)) return 'Co-op'
+  if (INTERN_PATTERN.test(haystack)) return 'Internship'
+  if (NEW_GRAD_PATTERN.test(haystack)) return 'New Grad'
+  return null
+}
+
+const REGION_RULES: { pattern: RegExp; region: Region }[] = [
+  { pattern: /\b(remote|anywhere|distributed|work from home|wfh)\b/i, region: 'Remote' },
+  {
+    pattern:
+      /\b(united kingdom|uk|england|scotland|wales|london|manchester|edinburgh|cambridge|bristol|leeds|birmingham)\b/i,
+    region: 'United Kingdom',
+  },
+  {
+    pattern:
+      /\b(canada|ontario|quebec|british columbia|alberta|toronto|vancouver|montreal|ottawa|waterloo|calgary|\bon\b|\bbc\b|\bqc\b)\b/i,
+    region: 'Canada',
+  },
+]
+
+/**
+ * Map a free-text location onto one of the four regions Browse filters by.
+ *
+ * Remote is checked first: a "Remote - Canada" posting is more useful to a
+ * candidate as Remote than as Canada, and it is how the filter reads.
+ */
+export function classifyRegion(location: string, remoteHint?: boolean): Region {
+  if (remoteHint) return 'Remote'
+  for (const rule of REGION_RULES) {
+    if (rule.pattern.test(location)) return rule.region
+  }
+  // Everything else falls back to the US, which is where the bulk of the
+  // early-careers market these providers cover actually sits.
+  return 'United States'
+}
+
+export function classifyWorkModel(location: string, description: string): WorkModel {
+  if (/\bhybrid\b/i.test(location) || /\bhybrid\b/i.test(description)) return 'Hybrid'
+  if (/\b(remote|work from home|distributed)\b/i.test(location)) return 'Remote'
+  return 'On-site'
+}
+
+/**
+ * What the posting says about visa sponsorship.
+ *
+ * Negative phrasing is checked first and wins, because "we are unable to
+ * sponsor" contains the word "sponsor" and would otherwise read as a yes.
+ *
+ * Silence returns 'unknown', not 'no'. Most postings never mention sponsorship
+ * at all, and recording that as "does not sponsor" invents a rejection the
+ * employer never issued — which is exactly the thing this product exists to get
+ * right. An honest "not stated" is more useful to a candidate than a confident
+ * wrong answer in either direction.
+ */
+export function detectSponsorship(text: string): Sponsorship {
+  const negative =
+    /\b(no|not|unable to|cannot|can'?t|do(es)? not|will not|won'?t)\b[^.]{0,40}\b(sponsor|sponsorship|visa)\b/i
+  if (negative.test(text)) return 'no'
+
+  const positive =
+    /\b(sponsor(ship)?\s+(is\s+)?(available|offered|provided)|will sponsor|we sponsor|visa sponsorship|h-?1b sponsor|sponsor(s|ing)? (work )?visas?)\b/i
+  return positive.test(text) ? 'yes' : 'unknown'
+}
+
+/** Skills the UI shows as chips and the recommender matches against. */
+const SKILL_VOCABULARY = [
+  'Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'Go', 'Rust', 'Ruby', 'Swift',
+  'Kotlin', 'Scala', 'PHP', 'R', 'MATLAB', 'SQL', 'NoSQL', 'React', 'Angular', 'Vue',
+  'Next.js', 'Node.js', 'Express', 'Django', 'Flask', 'Spring', 'Rails', '.NET',
+  'GraphQL', 'REST', 'Docker', 'Kubernetes', 'Terraform', 'AWS', 'Azure', 'GCP',
+  'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Kafka', 'Spark', 'Hadoop', 'Airflow',
+  'TensorFlow', 'PyTorch', 'Pandas', 'NumPy', 'scikit-learn', 'Machine Learning',
+  'Deep Learning', 'NLP', 'Computer Vision', 'Data Analysis', 'Git', 'CI/CD', 'Linux',
+  'HTML', 'CSS', 'Tailwind', 'Figma', 'Agile', 'Testing',
+]
+
+/**
+ * Pull known skills out of the posting body.
+ *
+ * A fixed vocabulary rather than free extraction: the chips are only useful if
+ * they match the vocabulary the resume matcher already uses, and an open-ended
+ * extractor produces noise like "team player" that no one can filter on.
+ */
+export function extractSkills(text: string, limit = 8): string[] {
+  const found: string[] = []
+  for (const skill of SKILL_VOCABULARY) {
+    // Escape regex metacharacters in entries like "C++" and ".NET".
+    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    // `\b` only works when the term starts with a word character, so entries
+    // like ".NET" opt out of it.
+    const boundary = /^[a-z0-9]/i.test(skill) ? '\\b' : ''
+    // The trailing guard stops a short term matching inside a longer one —
+    // "Git" inside "Gitlab", "C" inside "C++", "Node" inside "Node.js". A dot
+    // only counts as part of the term when a letter or digit follows it, so a
+    // skill ending a sentence ("...and React.") still matches.
+    //
+    // Very short names are matched case-sensitively. Case-insensitively, "R"
+    // hits the pronoun-sized noise in any prose and "Go" hits the English verb,
+    // which put bogus chips on postings that mention neither language.
+    const flags = skill.length <= 2 ? '' : 'i'
+    if (new RegExp(`${boundary}${escaped}(?![a-z0-9+#]|\\.[a-z0-9])`, flags).test(text)) {
+      found.push(skill)
+      if (found.length >= limit) break
+    }
+  }
+  return found
+}
+
+/* -------------------------------------------------------------------------- */
+/* Identity                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function sha1(value: string): string {
+  return createHash('sha1').update(value).digest('hex')
+}
+
+/**
+ * Cross-provider identity for a posting.
+ *
+ * Company, title and region — not the raw location string, because one provider
+ * says "Seattle, WA" where another says "Seattle, Washington, United States"
+ * for the same opening, and a fingerprint that disagrees on those would let the
+ * duplicate through. Region is coarse enough to survive that while still
+ * keeping genuinely different offices apart.
+ */
+export function fingerprintOf(company: string, title: string, region: Region): string {
+  return sha1(`${identityKey(company)}|${identityKey(title)}|${region}`)
+}
+
+/** Hash of the fields worth rewriting a row for. */
+export function contentHashOf(job: Omit<Job, 'id' | 'createdAt' | 'updatedAt' | 'contentHash'>) {
+  return sha1(
+    [
+      job.title,
+      job.company,
+      job.loc,
+      job.type,
+      job.region,
+      job.workModel,
+      job.sponsorship,
+      job.skills.join(','),
+      job.description,
+      job.applyUrl,
+      job.postedAt,
+    ].join('|'),
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/* Entry point                                                                */
+/* -------------------------------------------------------------------------- */
+
+export type NormalizedJob = Omit<Job, 'id' | 'createdAt' | 'updatedAt'>
+
+/**
+ * Normalise one raw posting, or return null to reject it.
+ *
+ * Rejection is not an error: most of what these feeds carry is senior roles
+ * RoleVault doesn't list, so the caller counts skips rather than logging them.
+ */
+export function normalizeJob(raw: RawJob, source: string): NormalizedJob | null {
+  const title = raw.title?.trim()
+  const company = raw.company?.trim()
+  if (!title || !company || !raw.applyUrl) return null
+
+  const type = classifyJobType(title, raw.employmentTypeHint)
+  if (type === null) return null
+
+  const description = htmlToText(raw.description ?? '')
+  const location = raw.location?.trim() || 'Not specified'
+  const region = classifyRegion(location, raw.remoteHint)
+
+  const base = {
+    title,
+    company,
+    loc: location,
+    type,
+    region,
+    workModel: classifyWorkModel(location, description),
+    // A source that records sponsorship as a field beats inferring it from
+    // prose, so an explicit hint wins. Otherwise read the description, which
+    // returns 'unknown' when it stays silent.
+    sponsorship: raw.sponsorshipHint ?? detectSponsorship(`${title}\n${description}`),
+    skills: extractSkills(description),
+    description,
+    applyUrl: raw.applyUrl,
+    // Sources that omit a date are treated as posted now; sorting by recency is
+    // still more useful than dropping them or parking them at the epoch.
+    postedAt: raw.postedAt ?? new Date().toISOString(),
+    applied: 0,
+    source,
+    externalId: raw.externalId,
+    fingerprint: fingerprintOf(company, title, region),
+  }
+
+  return { ...base, contentHash: contentHashOf(base) }
+}

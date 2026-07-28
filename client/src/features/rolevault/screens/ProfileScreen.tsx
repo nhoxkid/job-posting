@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavBar } from '../../../components/layout/RoleVaultChrome'
+import { Clickable } from '../../../components/ui/Clickable'
 import { usePalette } from '../../../lib/palette'
 import type { RoleVaultScreen, ProfileTab } from '../types'
 
@@ -37,11 +38,11 @@ export function ProfileScreen({ go, detectedSkills, resumeName, setDetectedSkill
 				<aside style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 16, padding: 14, position: 'sticky', top: 90 }}>
 					<div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 						{navItems.map((n) => (
-							<div key={n.key} onClick={() => setProfileTab(n.key)} style={{ fontSize: 14.5, fontWeight: profileTab === n.key ? 700 : 600, color: profileTab === n.key ? p.ink : p.body, background: profileTab === n.key ? p.accentSoftBg : 'transparent', borderRadius: 10, padding: '11px 14px', cursor: 'pointer' }}>{n.label}</div>
+							<Clickable as='div' key={n.key} onClick={() => setProfileTab(n.key)} style={{ width: '100%', fontSize: 14.5, fontWeight: profileTab === n.key ? 700 : 600, color: profileTab === n.key ? p.ink : p.body, background: profileTab === n.key ? p.accentSoftBg : 'transparent', borderRadius: 10, padding: '11px 14px' }}>{n.label}</Clickable>
 						))}
 					</div>
 					<div style={{ borderTop: `1px solid ${p.borderSubtle}`, margin: '12px 0' }} />
-					<div onClick={() => setProfileTab('delete')} style={{ fontSize: 14.5, fontWeight: profileTab === 'delete' ? 700 : 600, color: p.danger, background: profileTab === 'delete' ? p.dangerSoftBg : 'transparent', borderRadius: 10, padding: '11px 14px', cursor: 'pointer' }}>Delete Account</div>
+					<Clickable as='div' onClick={() => setProfileTab('delete')} style={{ width: '100%', fontSize: 14.5, fontWeight: profileTab === 'delete' ? 700 : 600, color: p.danger, background: profileTab === 'delete' ? p.dangerSoftBg : 'transparent', borderRadius: 10, padding: '11px 14px' }}>Delete Account</Clickable>
 				</aside>
 				<section style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 16, padding: '30px 32px', minHeight: 420 }}>
 					{profileTab === 'profile' && (
@@ -66,12 +67,12 @@ export function ProfileScreen({ go, detectedSkills, resumeName, setDetectedSkill
 								<div style={{ display: 'flex', alignItems: 'center', gap: 14, border: `1.5px solid ${p.border}`, borderRadius: 12, padding: 16, maxWidth: 520, marginBottom: 16 }}>
 									<div style={{ width: 42, height: 42, borderRadius: 10, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13 }}>PDF</div>
 									<div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14.5, color: p.ink }}>{resumeName}</div><div style={{ fontSize: 13, color: p.muted }}>{detectedSkills.length} skills detected</div></div>
-									<span onClick={() => {
+									<Clickable onClick={() => {
 										setDetectedSkills([])
 										setResumeName(null)
 										window.localStorage.removeItem('rv-detected-skills')
 										window.localStorage.removeItem('rv-resume-name')
-									}} style={{ fontSize: 13, fontWeight: 600, color: p.danger, cursor: 'pointer' }}>Remove</span>
+									}} style={{ fontSize: 13, fontWeight: 600, color: p.danger }}>Remove</Clickable>
 								</div>
 							) : (
 								<div style={{ border: `1.5px dashed ${p.accentBorder}`, background: p.surfaceMuted, borderRadius: 12, padding: 18, maxWidth: 520, marginBottom: 16, color: p.body }}>No resume uploaded yet. Upload a PDF to start recommendations.</div>

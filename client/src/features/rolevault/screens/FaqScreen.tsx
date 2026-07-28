@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavBar } from '../../../components/layout/RoleVaultChrome'
+import { Clickable } from '../../../components/ui/Clickable'
 import { usePalette } from '../../../lib/palette'
 import type { RoleVaultScreen } from '../types'
 
@@ -41,13 +42,13 @@ export function FaqScreen({ go }: FaqScreenProps) {
 									const id = `g${gi}-${ii}`
 									const isOpen = openFaq === id
 									return (
-										<div key={id} onClick={() => setOpenFaq(isOpen ? null : id)} className='rv-faq-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 14, padding: '18px 20px', cursor: 'pointer', transition: 'border-color .15s' }}>
+										<Clickable as='div' key={id} onClick={() => setOpenFaq(isOpen ? null : id)} className='rv-faq-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 14, padding: '18px 20px', cursor: 'pointer', transition: 'border-color .15s' }}>
 											<div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
 												<span style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 15.5, lineHeight: 1.35, color: p.ink }}>{it.q}</span>
 												<span style={{ color: p.accent, fontSize: 18, fontWeight: 700, flexShrink: 0, lineHeight: 1.2 }}>{isOpen ? '−' : '+'}</span>
 											</div>
 											{isOpen && <p style={{ fontSize: 14, lineHeight: 1.6, color: p.body, margin: '12px 0 0' }}>{it.a}</p>}
-										</div>
+										</Clickable>
 									)
 								})}
 							</div>

@@ -8,9 +8,11 @@ import { apiClient, type QueryParams } from './client'
 function toParams(query: JobQuery): QueryParams {
   return {
     search: query.search,
-    employmentType: query.employmentType,
-    remote: query.remote,
-    status: query.status,
+    // Repeatable filters go over the wire comma-separated; the server accepts
+    // either that or repeated keys.
+    type: query.types?.length ? query.types.join(',') : undefined,
+    region: query.regions?.length ? query.regions.join(',') : undefined,
+    sponsorship: query.sponsorship?.length ? query.sponsorship.join(',') : undefined,
     page: query.page,
     pageSize: query.pageSize,
   }

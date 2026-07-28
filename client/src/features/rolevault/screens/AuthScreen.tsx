@@ -1,3 +1,4 @@
+import { Clickable } from '../../../components/ui/Clickable'
 import { ThemeToggle } from '../../../components/ui/ThemeToggle'
 import { usePalette } from '../../../lib/palette'
 import type { RoleVaultScreen } from '../types'
@@ -42,7 +43,7 @@ export function AuthScreen({ mode, go }: AuthScreenProps) {
 	return (
 		<div style={{ animation: 'spr-up .35s ease both', minHeight: '100vh', background: p.pageBg, color: p.ink }}>
 			<div style={{ background: p.surface, borderBottom: `1px solid ${p.borderSubtle}`, padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-				<span onClick={() => go('landing')} style={{ fontWeight: 600, fontSize: 15, color: p.body, cursor: 'pointer' }}>← {back}</span>
+				<Clickable onClick={() => go('landing')} className='rv-nav-link' style={{ fontWeight: 600, fontSize: 15, color: p.body }}>← {back}</Clickable>
 				<ThemeToggle />
 			</div>
 			<div style={{ display: 'flex', justifyContent: 'center', padding: '56px 24px' }}>
@@ -79,11 +80,11 @@ export function AuthScreen({ mode, go }: AuthScreenProps) {
 					<div style={{ borderTop: `1px solid ${p.borderSubtle}`, marginTop: 26, paddingTop: 20, textAlign: 'center' }}>
 						{mode === 'login' ? (
 							<>
-								<div style={{ fontSize: 15, color: p.body }}>{"Don't have an account? "}<span onClick={() => go('register')} style={{ fontWeight: 700, color: p.accent, cursor: 'pointer' }}>Sign up</span></div>
-								<div onClick={() => go('browse')} style={{ fontSize: 13.5, color: p.muted, marginTop: 8, cursor: 'pointer' }}>Continue as guest (browse only) →</div>
+								<div style={{ fontSize: 15, color: p.body }}>{"Don't have an account? "}<Clickable onClick={() => go('register')} style={{ fontWeight: 700, color: p.accent, display: 'inline' }}>Sign up</Clickable></div>
+								<Clickable onClick={() => go('browse')} style={{ fontSize: 13.5, color: p.muted, marginTop: 8, marginInline: 'auto' }}>Continue as guest (browse only) →</Clickable>
 							</>
 						) : (
-							<div style={{ fontSize: 15, color: p.body }}>Already have an account? <span onClick={() => go('login')} style={{ fontWeight: 700, color: p.accent, cursor: 'pointer' }}>Log in</span></div>
+							<div style={{ fontSize: 15, color: p.body }}>Already have an account? <Clickable onClick={() => go('login')} style={{ fontWeight: 700, color: p.accent, display: 'inline' }}>Log in</Clickable></div>
 						)}
 					</div>
 				</div>

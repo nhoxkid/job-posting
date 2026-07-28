@@ -54,6 +54,8 @@ export function ThemeToggle({ variant = 'onLight' }: { variant?: 'onDark' | 'onL
         cursor: 'pointer',
         background: trackBg,
         border: `1.5px solid ${trackBorder}`,
+        // Safari only honours the -webkit- prefixed property.
+        WebkitBackdropFilter: onDark ? 'blur(8px)' : undefined,
         backdropFilter: onDark ? 'blur(8px)' : undefined,
         transition: 'background 0.2s, border-color 0.2s',
       }}

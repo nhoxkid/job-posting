@@ -7,29 +7,13 @@
  */
 
 import type { Request, Response } from 'express'
-import type { EmploymentType, JobQuery, JobStatus } from '../models/job'
-import { jobService } from '../services/job.service'
-
-/** Parse and coerce list query params from their string representations. */
-function parseListQuery(q: Request['query']): JobQuery {
-  const query: JobQuery = {}
-
-  if (typeof q.search === 'string' && q.search.trim()) query.search = q.search.trim()
-  if (typeof q.employmentType === 'string') query.employmentType = q.employmentType as EmploymentType
-  if (typeof q.status === 'string') query.status = q.status as JobStatus
-  if (typeof q.remote === 'string') query.remote = q.remote === 'true'
-
-  const page = Number(q.page)
-  if (Number.isFinite(page) && page > 0) query.page = page
-  const pageSize = Number(q.pageSize)
-  if (Number.isFinite(pageSize) && pageSize > 0) query.pageSize = pageSize
-
-  return query
-}
+import { jobService, parseJobQuery } from '../services/job.service'
 
 export const jobController = {
   list: async (req: Request, res: Response): Promise<void> => {
-    const result = await jobService.list(parseListQuery(req.query))
+    // Query parsing lives in the service so it is covered by the same tests as
+    // the filtering it feeds, and so the controller stays a thin boundary.
+    const result = await jobService.list(parseJobQuery(req.query as Record<string, unknown>))
     res.json(result)
   },
 

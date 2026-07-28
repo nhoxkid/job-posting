@@ -44,6 +44,15 @@
   --rv-hover-row: #f7fbf8;
   --rv-hover-rec-shadow: 0 10px 26px rgba(16, 33, 27, 0.07);
   --rv-hover-nav-dark: #9fe9c4;
+
+  /* Hover colours for controls sitting on the hero band and the footer. Those
+   * two surfaces are dark in BOTH themes (see the `hero*` keys in palette.ts —
+   * dark mode deepens them rather than inverting), so unlike everything above
+   * these need no `.dark` override: one value is correct on both. */
+  --rv-hover-hero-ink: #7ce7b0;
+  --rv-hover-hero-bg: rgba(255, 255, 255, 0.15);
+  --rv-hover-hero-border: rgba(124, 231, 176, 0.55);
+  --rv-hover-hero-accent: #9cf0c5;
 }
 
 .dark {
@@ -93,6 +102,100 @@
 
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-display: 'Schibsted Grotesk', system-ui, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+ * Interaction & accessibility baseline.
+ *
+ * Applies to every interactive element in the app rather than being repeated
+ * per screen. `:focus-visible` (not `:focus`) means the ring appears for
+ * keyboard and assistive-tech users without flashing on every mouse click.
+ *
+ * The ring is `currentColor` on purpose: these controls sit on backgrounds that
+ * range from white cards to the near-black hero band, and currentColor is by
+ * definition the colour already legible against whichever one it's on — so the
+ * ring cannot come out invisible the way a fixed accent would on the hero.
+ * ------------------------------------------------------------------------- */
+:where(button, a, input, select, textarea, summary, [role='button'], [role='switch'], [tabindex]):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Hover/press feedback for every button in the app.
+ *
+ * Done with a `currentColor` overlay rather than `filter: brightness()`, which
+ * was the obvious choice but is wrong here: brightness can't lighten white, so
+ * the outline buttons sitting on white cards showed no hover at all. An overlay
+ * tinted with `currentColor` adapts instead — on a white button with dark text
+ * it darkens, on the translucent hero buttons with white text it lightens — so
+ * one rule reads clearly on every surface in both themes.
+ *
+ * `isolation: isolate` keeps the overlay from escaping its own stacking
+ * context, and `border-radius: inherit` makes it follow each button's pill or
+ * rounded-rect shape. */
+button,
+[role='switch'] {
+  position: relative;
+  isolation: isolate;
+  transition: transform 0.18s ease;
+}
+
+button::after,
+[role='switch']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+button:hover:not(:disabled)::after,
+[role='switch']:hover::after {
+  opacity: 0.16;
+}
+
+button:active:not(:disabled)::after,
+[role='switch']:active::after {
+  opacity: 0.26;
+}
+
+button:active:not(:disabled),
+[role='switch']:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:disabled::after {
+  opacity: 0;
+}
+
+/* Span-based click targets (see components/ui/Clickable.tsx). Sized to their
+ * own text so hover can't extend across a stretched flex row, and non-selecting
+ * so a click reads as a press rather than dragging a text selection. */
+.rv-clickable {
+  width: fit-content;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  [role='button'],
+  [role='switch'] {
+    transition: none;
+  }
+  button:active:not(:disabled),
+  [role='button']:active,
+  [role='switch']:active {
+    transform: none;
+  }
 }
 
 @layer base {

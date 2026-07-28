@@ -5,8 +5,17 @@
  * and shapes the paginated envelope returned to the controller.
  */
 
-import { EMPLOYMENT_TYPES, JOB_STATUSES } from '../models/job'
-import type { CreateJobInput, Job, JobQuery, UpdateJobInput } from '../models/job'
+import { JOB_TYPES, REGIONS, SPONSORSHIPS, WORK_MODELS } from '../models/job'
+import type {
+  CreateJobInput,
+  Job,
+  JobQuery,
+  JobType,
+  Region,
+  Sponsorship,
+  UpdateJobInput,
+  WorkModel,
+} from '../models/job'
 import { jobRepository, type JobRepository } from '../repositories/job.repository'
 import { ApiError } from '../utils/ApiError'
 
@@ -25,6 +34,52 @@ function requireString(value: unknown, field: string): string {
   return value.trim()
 }
 
+function requireOneOf<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+  field: string,
+): T {
+  const raw = requireString(value, field)
+  if (!allowed.includes(raw as T)) {
+    throw ApiError.badRequest(`"${field}" must be one of: ${allowed.join(', ')}`)
+  }
+  return raw as T
+}
+
+/**
+ * Read a repeatable query parameter.
+ *
+ * Express gives `?type=a` as a string and `?type=a&type=b` as an array, so both
+ * shapes have to be handled. Unknown values are dropped rather than rejected:
+ * a stale bookmark with a removed filter should still return results.
+ */
+function parseList<T extends string>(value: unknown, allowed: readonly T[]): T[] | undefined {
+  if (value === undefined) return undefined
+  const raw = Array.isArray(value) ? value : String(value).split(',')
+  const parsed = raw
+    .map((item) => String(item).trim())
+    .filter((item): item is T => allowed.includes(item as T))
+  return parsed.length > 0 ? parsed : undefined
+}
+
+function parseNumber(value: unknown): number | undefined {
+  if (value === undefined || value === '') return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+/** Build a `JobQuery` from raw `req.query`. */
+export function parseJobQuery(raw: Record<string, unknown>): JobQuery {
+  return {
+    search: typeof raw.search === 'string' ? raw.search : undefined,
+    types: parseList<JobType>(raw.type ?? raw.types, JOB_TYPES),
+    regions: parseList<Region>(raw.region ?? raw.regions, REGIONS),
+    sponsorship: parseList<Sponsorship>(raw.sponsorship ?? raw.spons, SPONSORSHIPS),
+    page: parseNumber(raw.page),
+    pageSize: parseNumber(raw.pageSize),
+  }
+}
+
 /** Validate and normalise a create payload coming off the wire. */
 function parseCreateInput(body: unknown): CreateJobInput {
   if (typeof body !== 'object' || body === null) {
@@ -32,32 +87,31 @@ function parseCreateInput(body: unknown): CreateJobInput {
   }
   const b = body as Record<string, unknown>
 
-  const employmentType = requireString(b.employmentType, 'employmentType')
-  if (!EMPLOYMENT_TYPES.includes(employmentType as never)) {
-    throw ApiError.badRequest(
-      `"employmentType" must be one of: ${EMPLOYMENT_TYPES.join(', ')}`,
-    )
-  }
-
-  const status = b.status === undefined ? 'open' : requireString(b.status, 'status')
-  if (!JOB_STATUSES.includes(status as never)) {
-    throw ApiError.badRequest(`"status" must be one of: ${JOB_STATUSES.join(', ')}`)
-  }
-
-  const tags = Array.isArray(b.tags) ? b.tags.filter((t): t is string => typeof t === 'string') : []
+  const skills = Array.isArray(b.skills)
+    ? b.skills.filter((skill): skill is string => typeof skill === 'string')
+    : []
 
   return {
     title: requireString(b.title, 'title'),
     company: requireString(b.company, 'company'),
-    location: requireString(b.location, 'location'),
-    remote: Boolean(b.remote),
-    employmentType: employmentType as CreateJobInput['employmentType'],
-    description: requireString(b.description, 'description'),
-    tags,
-    salaryMin: typeof b.salaryMin === 'number' ? b.salaryMin : null,
-    salaryMax: typeof b.salaryMax === 'number' ? b.salaryMax : null,
-    currency: typeof b.currency === 'string' && b.currency.trim() ? b.currency.trim() : 'USD',
-    status: status as CreateJobInput['status'],
+    loc: requireString(b.loc, 'loc'),
+    type: requireOneOf<JobType>(b.type, JOB_TYPES, 'type'),
+    region: requireOneOf<Region>(b.region, REGIONS, 'region'),
+    workModel: b.workModel === undefined
+      ? ('On-site' as WorkModel)
+      : requireOneOf<WorkModel>(b.workModel, WORK_MODELS, 'workModel'),
+    sponsorship: b.sponsorship === undefined
+      ? 'unknown'
+      : requireOneOf<Sponsorship>(b.sponsorship, SPONSORSHIPS, 'sponsorship'),
+    skills,
+    description: typeof b.description === 'string' ? b.description : '',
+    applyUrl: requireString(b.applyUrl, 'applyUrl'),
+    postedAt: typeof b.postedAt === 'string' ? b.postedAt : new Date().toISOString(),
+    applied: typeof b.applied === 'number' ? b.applied : 0,
+    // Hand-created postings are still tagged with a provenance so every row in
+    // the table can be traced back to where it came from.
+    source: 'manual',
+    externalId: typeof b.externalId === 'string' ? b.externalId : `manual-${Date.now()}`,
   }
 }
 
@@ -67,7 +121,7 @@ export class JobService {
   async list(query: JobQuery): Promise<Paginated<Job>> {
     const { items, total } = await this.repo.list(query)
     const page = Math.max(1, Math.trunc(query.page ?? 1))
-    const pageSize = Math.min(100, Math.max(1, Math.trunc(query.pageSize ?? 12)))
+    const pageSize = Math.min(500, Math.max(1, Math.trunc(query.pageSize ?? 12)))
     return {
       data: items,
       page,

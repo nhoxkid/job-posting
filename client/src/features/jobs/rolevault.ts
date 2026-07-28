@@ -1,13 +1,27 @@
-import jobsData from '../../api/mockDb'
-import type { Job } from '../../api/mockDb'
+import type { Job } from '../../types/job'
 
-export const featuredHomeJobs = [...jobsData]
-	.sort(() => Math.random() - 0.5)
-	.slice(0, 6)
-	.map((job, index) => ({
-		...job,
-		time: `${2 + index * 2}h ago`,
-	}))
+/**
+ * The handful of postings the landing page features.
+ *
+ * Takes the board as an argument rather than reading a module-level dataset:
+ * jobs now arrive asynchronously from the API, so there is nothing to read at
+ * import time. Newest first — a stale posting is a poor advertisement.
+ */
+export function pickFeaturedJobs(jobs: Job[], count = 6): Job[] {
+	return [...jobs]
+		.sort((a, b) => b.postedAt.localeCompare(a.postedAt))
+		.slice(0, count)
+}
+
+/** Company initials for the avatar tiles, e.g. "Acme Labs" -> "AL". */
+export function companyInitials(company: string): string {
+	return company
+		.split(/\s+/)
+		.filter(Boolean)
+		.slice(0, 2)
+		.map((word) => word[0]?.toUpperCase() ?? '')
+		.join('')
+}
 
 const resumeSkillPatterns: Array<{ label: string; pattern: RegExp }> = [
 	{ label: 'Python', pattern: /\bpython\b/i },
@@ -73,11 +87,32 @@ export async function readFileAsText(file: File) {
 	return new TextDecoder('latin1').decode(buffer)
 }
 
-export function computeRecommendations(skills: string[]) {
-	if (!skills || skills.length === 0) return [] as Array<{ job: Job; score: number; matches: string[] }>
-	const scored = jobsData.map((job) => {
-		const matches = job.skills.filter((skill) => skills.includes(skill))
-		return { job, score: Math.round((matches.length / Math.max(1, job.skills.length)) * 100), matches }
-	})
-	return scored.sort((a, b) => b.score - a.score).slice(0, 5)
+export interface Recommendation {
+	job: Job
+	score: number
+	matches: string[]
+}
+
+/**
+ * Rank the board against the skills detected in a resume.
+ *
+ * Postings with no overlap are dropped rather than shown at 0% — a
+ * "recommendation" that matches nothing is noise, and the empty state is more
+ * honest when the resume genuinely doesn't fit anything on the board.
+ */
+export function computeRecommendations(skills: string[], jobs: Job[]): Recommendation[] {
+	if (!skills?.length || !jobs.length) return []
+
+	return jobs
+		.map((job) => {
+			const matches = job.skills.filter((skill) => skills.includes(skill))
+			return {
+				job,
+				score: Math.round((matches.length / Math.max(1, job.skills.length)) * 100),
+				matches,
+			}
+		})
+		.filter((entry) => entry.matches.length > 0)
+		.sort((a, b) => b.score - a.score)
+		.slice(0, 5)
 }

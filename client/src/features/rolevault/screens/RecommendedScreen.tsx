@@ -1,11 +1,15 @@
 import { NavBar } from '../../../components/layout/RoleVaultChrome'
+import { Clickable } from '../../../components/ui/Clickable'
 import { usePalette } from '../../../lib/palette'
+import { SponsorshipBadge } from '../../../components/ui/SponsorshipBadge'
+import { formatRelativeTime } from '../../../lib/format'
+import type { Recommendation } from '../../jobs/rolevault'
 import type { RoleVaultScreen } from '../types'
 
 export type RecommendedScreenProps = {
 	go: (s: RoleVaultScreen) => void
-	recommendations: any[]
-	selectJob: (id?: number) => void
+	recommendations: Recommendation[]
+	selectJob: (id?: string) => void
 	resumeName: string | null
 }
 
@@ -26,15 +30,15 @@ export function RecommendedScreen({ go, recommendations, selectJob, resumeName }
 					<>
 						<div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 							{recommendations.slice(0, 5).map((r) => (
-								<div key={r.job.id} onClick={() => selectJob(r.job.id)} className='rv-rec-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 16, padding: '22px 24px', cursor: 'pointer', display: 'flex', gap: 20, alignItems: 'center', transition: 'box-shadow .15s,border-color .15s' }}>
+								<Clickable as='div' key={r.job.id} onClick={() => selectJob(r.job.id)} label={`View ${r.job.title} at ${r.job.company}`} className='rv-rec-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 16, padding: '22px 24px', cursor: 'pointer', display: 'flex', gap: 20, alignItems: 'center', transition: 'box-shadow .15s,border-color .15s' }}>
 									<div style={{ flex: 1, minWidth: 0 }}>
 										<div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
 											<span style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 17, color: p.ink }}>{r.job.title} · {r.job.company}</span>
-											<span style={{ fontSize: 13.5, color: p.muted }}>{r.job.loc} · {r.job.posted}</span>
+											<span style={{ fontSize: 13.5, color: p.muted }}>{r.job.loc} · {formatRelativeTime(r.job.postedAt)}</span>
 										</div>
 										<div style={{ fontSize: 14, color: p.body, marginBottom: 12 }}><span style={{ color: p.muted }}>Matches:</span> {r.matches.join(', ')} <span style={{ color: p.accent, fontWeight: 600 }}>— {r.matches.length} of {r.job.skills.length} skills detected</span></div>
 										<div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-											{r.job.spons ? <span style={{ fontWeight: 600, fontSize: 12, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '4px 11px' }}>✓ Sponsorship</span> : <span style={{ fontWeight: 600, fontSize: 12, color: p.muted, background: p.chipBg, borderRadius: 999, padding: '4px 11px' }}>✗ No sponsorship</span>}
+											<SponsorshipBadge sponsorship={r.job.sponsorship} />
 											<span style={{ fontWeight: 600, fontSize: 12, color: p.body, background: p.surface, border: `1px solid ${p.border}`, borderRadius: 999, padding: '4px 11px' }}>{r.job.type}</span>
 											<span style={{ fontSize: 12.5, color: p.muted }}>{r.job.applied} applications</span>
 										</div>
@@ -43,7 +47,7 @@ export function RecommendedScreen({ go, recommendations, selectJob, resumeName }
 										<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 30, color: p.accent, lineHeight: 1 }}>{r.score}%</div>
 										<div style={{ fontSize: 12, fontWeight: 600, color: p.muted, marginTop: 3, letterSpacing: '0.03em' }}>MATCH</div>
 									</div>
-								</div>
+								</Clickable>
 							))}
 						</div>
 						<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: p.surfaceMuted, border: `1px solid ${p.borderSubtle}`, borderRadius: 14, padding: '16px 22px', marginTop: 18 }}>

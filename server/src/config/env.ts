@@ -25,6 +25,19 @@ export const env = {
   // SQL database connection. See src/db/index.ts. Only used when dbDriver is 'postgres'.
   databaseUrl: process.env.DATABASE_URL ?? '',
 
+  /* ---- Job ingestion (see src/ingest) ---- */
+
+  // Comma-separated Greenhouse board tokens, each optionally "token=Display Name".
+  // Empty falls back to the default crawl in src/ingest/providers/index.ts.
+  ingestGreenhouseBoards: process.env.INGEST_GREENHOUSE_BOARDS ?? '',
+
+  // Comma-separated Lever company slugs, same "slug=Display Name" form.
+  ingestLeverCompanies: process.env.INGEST_LEVER_COMPANIES ?? '',
+
+  // Max postings per provider to fetch full descriptions for. Curated feeds
+  // list far more than that; the remainder keep a composed summary.
+  ingestEnrichLimit: process.env.INGEST_ENRICH_LIMIT ?? '400',
+
   // TODO: add API keys / secrets here as needed, e.g.
   // apiKey: process.env.API_KEY ?? '',
   // jwtSecret: process.env.JWT_SECRET ?? '',

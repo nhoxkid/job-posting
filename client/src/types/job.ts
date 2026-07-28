@@ -1,35 +1,53 @@
 /**
  * Domain types for job postings.
  *
- * These mirror the shapes returned by the backend API (`server/src/models`).
- * Keep them in sync with the server-side schema.
+ * These mirror `server/src/models/job.ts` exactly. The server shape was chosen
+ * to match what these screens render, so nothing is translated in between —
+ * which also means the two files have to change together.
  */
 
-export const EMPLOYMENT_TYPES = [
-  'full-time',
-  'part-time',
-  'contract',
-  'internship',
-  'temporary',
-] as const
+export const JOB_TYPES = ['Internship', 'New Grad', 'Co-op'] as const
 
-export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number]
+export type JobType = (typeof JOB_TYPES)[number]
 
-export type JobStatus = 'open' | 'closed' | 'draft'
+export const REGIONS = ['United States', 'Canada', 'United Kingdom', 'Remote'] as const
+
+export type Region = (typeof REGIONS)[number]
+
+export const WORK_MODELS = ['On-site', 'Hybrid', 'Remote'] as const
+
+export type WorkModel = (typeof WORK_MODELS)[number]
+
+/**
+ * Visa sponsorship, as three states rather than a boolean.
+ *
+ * Most postings never mention sponsorship. Rendering that silence as "No"
+ * asserts a rejection the employer never made, so 'unknown' is carried all the
+ * way to the badge instead of being flattened on the way.
+ */
+export const SPONSORSHIPS = ['yes', 'no', 'unknown'] as const
+
+export type Sponsorship = (typeof SPONSORSHIPS)[number]
 
 export interface Job {
   id: string
   title: string
   company: string
-  location: string
-  remote: boolean
-  employmentType: EmploymentType
+  loc: string
+  type: JobType
+  region: Region
+  workModel: WorkModel
+  sponsorship: Sponsorship
+  skills: string[]
   description: string
-  tags: string[]
-  salaryMin: number | null
-  salaryMax: number | null
-  currency: string
-  status: JobStatus
+  applyUrl: string
+  /** ISO timestamp; format for display with `formatPostedAt`. */
+  postedAt: string
+  applied: number
+  source: string
+  externalId: string
+  fingerprint: string
+  contentHash: string
   createdAt: string
   updatedAt: string
 }
@@ -38,15 +56,16 @@ export interface Job {
 export interface CreateJobInput {
   title: string
   company: string
-  location: string
-  remote?: boolean
-  employmentType: EmploymentType
-  description: string
-  tags?: string[]
-  salaryMin?: number | null
-  salaryMax?: number | null
-  currency?: string
-  status?: JobStatus
+  loc: string
+  type: JobType
+  region: Region
+  workModel?: WorkModel
+  sponsorship?: Sponsorship
+  skills?: string[]
+  description?: string
+  applyUrl: string
+  postedAt?: string
+  applied?: number
 }
 
 /** Payload for updating a job posting (all fields optional). */
@@ -55,9 +74,9 @@ export type UpdateJobInput = Partial<CreateJobInput>
 /** Query parameters accepted by the list endpoint. */
 export interface JobQuery {
   search?: string
-  employmentType?: EmploymentType
-  remote?: boolean
-  status?: JobStatus
+  types?: JobType[]
+  regions?: Region[]
+  sponsorship?: Sponsorship[]
   page?: number
   pageSize?: number
 }
