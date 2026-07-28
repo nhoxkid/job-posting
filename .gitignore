@@ -19,6 +19,9 @@ dist-ssr
 # TS build info
 *.tsbuildinfo
 
+# Browser test artifacts
+playwright-report/
+test-results/
 
 
 # Editor directories and files

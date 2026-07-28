@@ -25,10 +25,13 @@
     "lint": "npm run lint --workspaces --if-present",
     "lint:fix": "npm run lint:fix --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "concurrently": "^9.1.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.4.2",

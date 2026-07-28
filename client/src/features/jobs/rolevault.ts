@@ -2,6 +2,43 @@ import type { Job } from '../../types/job'
 
 export const featuredHomeJobs: Job[] = []
 
+export type BrowseJobType = 'Internship' | 'New Grad'
+
+export type BrowseFilters = {
+	query: string
+	types: BrowseJobType[]
+	sponsorship: 'any' | 'yes' | 'no'
+}
+
+export function createDefaultBrowseFilters(): BrowseFilters {
+	return {
+		query: '',
+		types: ['Internship', 'New Grad'],
+		sponsorship: 'any',
+	}
+}
+
+function normalizeText(value: string) {
+	return value.toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+export function filterBrowseJobs(jobs: readonly Job[], filters: BrowseFilters): Job[] {
+	const query = normalizeText(filters.query)
+
+	return jobs.filter((job) => {
+		if (query) {
+			const searchable = normalizeText([job.position, job.employerName, job.jobLocation, job.jobType].join(' '))
+			if (!searchable.includes(query)) return false
+		}
+
+		const typeLabel: BrowseJobType = job.jobType === 'new grad' ? 'New Grad' : 'Internship'
+		if (!filters.types.includes(typeLabel)) return false
+		if (filters.sponsorship === 'yes' && !job.sponsorshipAvailable) return false
+		if (filters.sponsorship === 'no' && job.sponsorshipAvailable) return false
+		return true
+	})
+}
+
 const resumeSkillPatterns: Array<{ label: string; pattern: RegExp }> = [
 	{ label: 'Python', pattern: /\bpython\b/i },
 	{ label: 'JavaScript', pattern: /\bjavascript\b/i },

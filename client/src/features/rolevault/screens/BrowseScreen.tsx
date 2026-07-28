@@ -3,17 +3,8 @@ import type { Job } from '../../../types/job'
 import { Logo } from '../../../components/layout/RoleVaultChrome'
 import { ThemeToggle } from '../../../components/ui/ThemeToggle'
 import { usePalette } from '../../../lib/palette'
+import { createDefaultBrowseFilters, filterBrowseJobs, type BrowseFilters } from '../../jobs/rolevault'
 import type { RoleVaultScreen } from '../types'
-
-type BrowseFilters = {
-	query: string
-	types: string[]
-	sponsorship: 'any' | 'yes' | 'no'
-}
-
-function normalizeText(value: string) {
-	return value.toLowerCase().replace(/\s+/g, ' ')
-}
 
 function formatLocationCount(count: number) {
 	return `${count.toLocaleString()} result${count === 1 ? '' : 's'}`
@@ -27,11 +18,7 @@ export type BrowseScreenProps = {
 
 export function BrowseScreen({ go, selectJob, jobs }: BrowseScreenProps) {
 	const sourceJobs: Job[] = jobs || []
-	const [filters, setFilters] = useState<BrowseFilters>({
-		query: '',
-		types: ['Internship', 'New Grad'],
-		sponsorship: 'any',
-	})
+	const [filters, setFilters] = useState<BrowseFilters>(createDefaultBrowseFilters)
 	const [page, setPage] = useState(1)
 	const pageSize = 8
 	const p = usePalette()
@@ -40,18 +27,7 @@ export function BrowseScreen({ go, selectJob, jobs }: BrowseScreenProps) {
 		setPage(1)
 	}, [filters.query, filters.types, filters.sponsorship])
 
-	const filteredJobs = sourceJobs.filter((job) => {
-		const query = filters.query.trim().toLowerCase()
-		if (query) {
-			const searchable = normalizeText([job.position, job.employerName, job.jobLocation, job.jobType].join(' '))
-			if (!searchable.includes(query)) return false
-		}
-		const typeLabel = job.jobType === 'new grad' ? 'New Grad' : 'Internship'
-		if (!filters.types.includes(typeLabel)) return false
-		if (filters.sponsorship === 'yes' && !job.sponsorshipAvailable) return false
-		if (filters.sponsorship === 'no' && job.sponsorshipAvailable) return false
-		return true
-	})
+	const filteredJobs = filterBrowseJobs(sourceJobs, filters)
 
 	const totalPages = Math.max(1, Math.ceil(filteredJobs.length / pageSize))
 	const currentPage = Math.min(page, totalPages)
@@ -94,7 +70,7 @@ export function BrowseScreen({ go, selectJob, jobs }: BrowseScreenProps) {
 
 					<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: p.muted, marginBottom: 10 }}>Role Type</div>
 					<div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>
-						{['Internship', 'New Grad'].map((type) => {
+						{(['Internship', 'New Grad'] as const).map((type) => {
 							const checked = filters.types.includes(type)
 							return (
 								<label key={type} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 14, color: checked ? p.ink : p.body, fontWeight: checked ? 600 : 400, cursor: 'pointer' }}>
@@ -125,7 +101,7 @@ export function BrowseScreen({ go, selectJob, jobs }: BrowseScreenProps) {
 
 					<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${p.borderSubtle}`, paddingTop: 14 }}>
 						<span style={{ fontSize: 13, color: p.muted }}>{activeFilterCount} filters active</span>
-						<span onClick={() => setFilters({ query: '', types: ['Internship', 'New Grad'], sponsorship: 'any' })} style={{ fontSize: 13, fontWeight: 600, color: p.accent, cursor: 'pointer' }}>Clear all</span>
+						<span onClick={() => setFilters(createDefaultBrowseFilters())} style={{ fontSize: 13, fontWeight: 600, color: p.accent, cursor: 'pointer' }}>Clear all</span>
 					</div>
 				</aside>
 
@@ -148,7 +124,7 @@ export function BrowseScreen({ go, selectJob, jobs }: BrowseScreenProps) {
 						<div style={{ padding: 36, textAlign: 'center' }}>
 							<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 20, marginBottom: 8, color: p.ink }}>No jobs match these filters</div>
 							<div style={{ color: p.muted, marginBottom: 18 }}>Try widening your search, switching sponsorship mode, or clearing filters.</div>
-							<button onClick={() => setFilters({ query: '', types: ['Internship', 'New Grad'], sponsorship: 'any' })} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 700, fontSize: 14, color: p.accentButtonInk, background: p.accentButtonBg, border: 'none', borderRadius: 10, padding: '11px 18px', cursor: 'pointer' }}>Reset filters</button>
+							<button onClick={() => setFilters(createDefaultBrowseFilters())} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 700, fontSize: 14, color: p.accentButtonInk, background: p.accentButtonBg, border: 'none', borderRadius: 10, padding: '11px 18px', cursor: 'pointer' }}>Reset filters</button>
 						</div>
 					)}
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 22px', background: p.surfaceMuted, gap: 16, flexWrap: 'wrap' }}>
