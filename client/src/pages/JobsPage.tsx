@@ -2,24 +2,23 @@ import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction }
 import { Link, useSearchParams } from 'react-router-dom'
 import { Alert, AlertDescription, AlertTitle, Skeleton } from '../components/ui'
 import { useJobs } from '../features/jobs'
-import { formatEmploymentType, formatRelativeTime, formatSalary } from '../lib/format'
+import { formatApplicants, formatJobType, formatRelativeTime } from '../lib/format'
 import { sponsorsVisa } from '../lib/jobDisplay'
 import { usePalette, type Palette } from '../lib/palette'
-import type { EmploymentType, Job } from '../types/job'
+import type { Job, JobType } from '../types/job'
 
 const PAGE_SIZE = 8
 
-const TYPE_FILTERS: { label: string; value: EmploymentType }[] = [
+const TYPE_FILTERS: { label: string; value: JobType }[] = [
   { label: 'Internship', value: 'internship' },
-  { label: 'New Grad', value: 'full-time' },
-  { label: 'Co-op', value: 'contract' },
+  { label: 'New Grad', value: 'new grad' },
 ]
 
 const REGION_FILTERS: { label: string; match: (job: Job) => boolean }[] = [
-  { label: 'United States', match: (j) => /,\s*US$/i.test(j.location) },
-  { label: 'Canada', match: (j) => /,\s*CA$/i.test(j.location) },
-  { label: 'United Kingdom', match: (j) => /,\s*UK$/i.test(j.location) },
-  { label: 'Remote', match: (j) => j.remote || /remote/i.test(j.location) },
+  { label: 'United States', match: (j) => /,\s*(US|NY|CA|IL|OR|WA|TX|MA|VA|FL|ID|PA|DC|CT|WI|NC|UT|OH|MD|NJ|GA|CO)$/i.test(j.jobLocation) },
+  { label: 'Canada', match: (j) => /,\s*(Canada|Toronto|Vancouver|Waterloo|Montreal|Ottawa|Calgary|Edmonton|BC|ON|AB|QC)$/i.test(j.jobLocation) },
+  { label: 'United Kingdom', match: (j) => /,\s*(UK|London|Manchester|Cambridge|Oxford|Edinburgh)$/i.test(j.jobLocation) },
+  { label: 'Remote', match: (j) => j.workModel === 'remote' || /remote/i.test(j.jobLocation) },
 ]
 
 const gridCols = '2.4fr 1.4fr 1fr 1.1fr 1fr 1fr'
@@ -28,7 +27,7 @@ export function JobsPage() {
   const p = usePalette()
   const [searchParams] = useSearchParams()
   const [search, setSearch] = useState(searchParams.get('search') ?? '')
-  const [types, setTypes] = useState<Set<EmploymentType>>(new Set())
+  const [types, setTypes] = useState<Set<JobType>>(new Set())
   const [regions, setRegions] = useState<Set<string>>(new Set())
   const [sponsorOnly, setSponsorOnly] = useState(false)
   const [page, setPage] = useState(1)
@@ -42,17 +41,17 @@ export function JobsPage() {
     marginBottom: 10,
   } as const
 
-  const { data, isPending, isError, error } = useJobs({ status: 'open', pageSize: 100 })
+  const { data, isPending, isError, error } = useJobs({ active: true, pageSize: 100 })
 
   const filtered = useMemo(() => {
     const jobs = data?.data ?? []
     const q = search.trim().toLowerCase()
     return jobs.filter((job) => {
       if (q) {
-        const haystack = [job.title, job.company, job.location, ...job.tags].join(' ').toLowerCase()
+        const haystack = [job.position, job.employerName, job.jobLocation].join(' ').toLowerCase()
         if (!haystack.includes(q)) return false
       }
-      if (types.size > 0 && !types.has(job.employmentType)) return false
+      if (types.size > 0 && !types.has(job.jobType)) return false
       if (sponsorOnly && !sponsorsVisa(job)) return false
       if (regions.size > 0) {
         const matchesRegion = REGION_FILTERS.some((r) => regions.has(r.label) && r.match(job))
@@ -244,7 +243,7 @@ export function JobsPage() {
           <div>Type</div>
           <div>Sponsorship</div>
           <div>Posted</div>
-          <div style={{ textAlign: 'right' }}>Salary</div>
+          <div style={{ textAlign: 'right' }}>Applicants</div>
         </div>
 
         {isPending && (
@@ -274,8 +273,8 @@ export function JobsPage() {
           !isError &&
           visible.map((job) => (
             <Link
-              key={job.id}
-              to={`/jobs/${job.id}`}
+              key={job.jobId}
+              to={`/jobs/${job.jobId}`}
               className="rv-table-row"
               style={{
                 display: 'grid',
@@ -292,12 +291,12 @@ export function JobsPage() {
             >
               <div>
                 <div className="rv-display" style={{ fontWeight: 700, fontSize: 15, color: p.ink }}>
-                  {job.title}
+                  {job.position}
                 </div>
-                <div style={{ fontSize: 13, color: p.muted, marginTop: 2 }}>{job.company}</div>
+                <div style={{ fontSize: 13, color: p.muted, marginTop: 2 }}>{job.employerName}</div>
               </div>
               <div style={{ fontSize: 13.5, color: p.body }}>
-                {job.remote ? 'Remote' : job.location}
+                {job.workModel === 'remote' ? 'Remote' : job.jobLocation}
               </div>
               <div>
                 <span
@@ -310,7 +309,7 @@ export function JobsPage() {
                     padding: '4px 10px',
                   }}
                 >
-                  {formatEmploymentType(job.employmentType)}
+                  {formatJobType(job.jobType)}
                 </span>
               </div>
               <div>
@@ -343,10 +342,10 @@ export function JobsPage() {
                 )}
               </div>
               <div style={{ fontSize: 13.5, color: p.muted }}>
-                {formatRelativeTime(job.createdAt)}
+                {formatRelativeTime(job.postingDate)}
               </div>
               <div style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, color: p.body }}>
-                {formatSalary(job)}
+                {formatApplicants(job.numberOfApplicants)}
               </div>
             </Link>
           ))}

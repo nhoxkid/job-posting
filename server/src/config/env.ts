@@ -25,7 +25,9 @@ export const env = {
   // SQL database connection. See src/db/index.ts. Only used when dbDriver is 'postgres'.
   databaseUrl: process.env.DATABASE_URL ?? '',
 
-  // TODO: add API keys / secrets here as needed, e.g.
-  // apiKey: process.env.API_KEY ?? '',
-  // jwtSecret: process.env.JWT_SECRET ?? '',
+  // Gemini API key for on-demand job summary generation
+  geminiApiKey: process.env.GEMINI_API_KEY ?? '',
+
+  // Shared secret for GitHub Actions webhook ingest
+  ingestSecret: process.env.INGEST_SECRET ?? '',
 }

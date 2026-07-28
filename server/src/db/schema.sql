@@ -13,24 +13,31 @@ CREATE TABLE users (
 -- JOB_POSTINGS table
 CREATE TABLE job_postings (
     job_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    employer_name VARCHAR(75) NOT NULL,
-    position VARCHAR(50) NOT NULL,
-    job_type VARCHAR(20) NOT NULL,
-    job_location VARCHAR(75) NOT NULL,
+    employer_name VARCHAR(100) NOT NULL,
+    position VARCHAR(200) NOT NULL,
+    job_type VARCHAR(20) NOT NULL DEFAULT 'internship',
+    job_location VARCHAR(200) NOT NULL,
     job_summary TEXT,
     company_summary TEXT,
-    posting_date DATE NOT NULL,
-    work_model VARCHAR(20) NOT NULL,
+    posting_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    work_model VARCHAR(20) DEFAULT 'In-person',
     sponsorship_available BOOLEAN NOT NULL DEFAULT FALSE,
     application_deadline TIMESTAMP,
-    application_link VARCHAR(150) NOT NULL,
+    application_link VARCHAR(500) NOT NULL,
     number_of_applicants BIGINT NOT NULL DEFAULT 0,
+
+    -- Aggregation fields (populated by GitHub Actions ingest)
+    source_id VARCHAR(100) UNIQUE,
+    source_repo VARCHAR(100),
+    description_raw TEXT,
+    season VARCHAR(20),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
 
     CONSTRAINT chk_job_type
         CHECK (job_type IN ('internship', 'new grad')),
 
     CONSTRAINT chk_work_model
-        CHECK (work_model IN ('In-person', 'remote', 'hybrid')),
+        CHECK (work_model IS NULL OR work_model IN ('In-person', 'remote', 'hybrid')),
 
     CONSTRAINT chk_number_of_applicants
         CHECK (number_of_applicants >= 0)

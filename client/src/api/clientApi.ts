@@ -1,33 +1,44 @@
-import axios from "axios";
-import jobs from "./mockDb";
-import type { Job } from "./mockDb";
+import axios from 'axios'
+import type { Job } from '../types/job'
 
-const api = axios.create({ baseURL: "/api" });
+const api = axios.create({ baseURL: 'http://localhost:4000/api' })
 
 export const fetchJobs = async (): Promise<Job[]> => {
-  await new Promise((r) => setTimeout(r, 120));
-  return jobs;
-};
+  try {
+    const res = await api.get<{ data: Job[] }>('/jobs', {
+      params: { pageSize: 100 },
+    })
+    return res.data.data
+  } catch {
+    console.error('Failed to fetch live jobs from server')
+    return []
+  }
+}
 
 export const fetchJobById = async (id: number): Promise<Job | undefined> => {
-  await new Promise((r) => setTimeout(r, 80));
-  return jobs.find((j) => j.id === id);
-};
+  try {
+    const res = await api.get<Job>(`/jobs/${id}`)
+    return res.data
+  } catch {
+    console.error(`Failed to fetch job ${id} from server`)
+    return undefined
+  }
+}
 
 export const postRegister = async (payload: { email: string; password: string }) => {
   try {
-    return await api.post("/auth/register", payload);
+    return await api.post('/auth/register', payload)
   } catch {
-    return { status: 200, data: { message: "mock registered" } };
+    return { status: 200, data: { message: 'mock registered' } }
   }
-};
+}
 
 export const postLogin = async (payload: { email: string; password: string }) => {
   try {
-    return await api.post("/auth/login", payload);
+    return await api.post('/auth/login', payload)
   } catch {
-    return { status: 200, data: { token: "mock-token" } };
+    return { status: 200, data: { token: 'mock-token' } }
   }
-};
+}
 
-export default api;
+export default api

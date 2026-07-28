@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { healthRoutes } from './health.routes'
+import { ingestRouter } from './ingest.routes'
 import { jobRoutes } from './job.routes'
 import { preferencesRoutes } from './preferences.routes'
 
@@ -9,6 +10,4 @@ export const apiRouter = Router()
 apiRouter.use('/health', healthRoutes)
 apiRouter.use('/jobs', jobRoutes)
 apiRouter.use('/preferences', preferencesRoutes)
-
-// TODO: mount additional resource routers here, e.g.
-// apiRouter.use('/users', userRoutes)
+apiRouter.use('/ingest', ingestRouter)

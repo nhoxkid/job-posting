@@ -1,13 +1,6 @@
-import jobsData from '../../api/mockDb'
-import type { Job } from '../../api/mockDb'
+import type { Job } from '../../types/job'
 
-export const featuredHomeJobs = [...jobsData]
-	.sort(() => Math.random() - 0.5)
-	.slice(0, 6)
-	.map((job, index) => ({
-		...job,
-		time: `${2 + index * 2}h ago`,
-	}))
+export const featuredHomeJobs: Job[] = []
 
 const resumeSkillPatterns: Array<{ label: string; pattern: RegExp }> = [
 	{ label: 'Python', pattern: /\bpython\b/i },
@@ -73,11 +66,15 @@ export async function readFileAsText(file: File) {
 	return new TextDecoder('latin1').decode(buffer)
 }
 
-export function computeRecommendations(skills: string[]) {
-	if (!skills || skills.length === 0) return [] as Array<{ job: Job; score: number; matches: string[] }>
-	const scored = jobsData.map((job) => {
-		const matches = job.skills.filter((skill) => skills.includes(skill))
-		return { job, score: Math.round((matches.length / Math.max(1, job.skills.length)) * 100), matches }
+export function computeRecommendations(skills: string[], jobs: Job[] = []) {
+	if (!skills || skills.length === 0 || !jobs || jobs.length === 0) {
+		return [] as Array<{ job: Job; score: number; matches: string[] }>
+	}
+	const scored = jobs.map((job) => {
+		// match against position and location
+		const text = `${job.position} ${job.jobLocation}`.toLowerCase()
+		const matches = skills.filter((skill) => text.includes(skill.toLowerCase()))
+		return { job, score: Math.round((matches.length / Math.max(1, skills.length)) * 100), matches }
 	})
 	return scored.sort((a, b) => b.score - a.score).slice(0, 5)
 }

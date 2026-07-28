@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { BrandLogo } from '../components/brand/Logo'
 import { Alert, AlertDescription, AlertTitle, Skeleton } from '../components/ui'
 import { useJob } from '../features/jobs'
-import { formatEmploymentType, formatRelativeTime, formatSalary } from '../lib/format'
+import { formatApplicants, formatJobType, formatRelativeTime, formatWorkModel } from '../lib/format'
 import { companyInitials, sponsorsVisa } from '../lib/jobDisplay'
 import { usePalette, type Palette } from '../lib/palette'
 
@@ -110,7 +110,7 @@ export function JobDetailPage() {
                   fontSize: 20,
                 }}
               >
-                {companyInitials(job.company)}
+                {companyInitials(job.employerName)}
               </div>
               <div style={{ position: 'relative', flex: 1, minWidth: 240 }}>
                 <h1
@@ -123,10 +123,10 @@ export function JobDetailPage() {
                     color: '#fff',
                   }}
                 >
-                  {job.title}
+                  {job.position}
                 </h1>
                 <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.72)' }}>
-                  {job.company} · {job.location} · Posted {formatRelativeTime(job.createdAt)}
+                  {job.employerName} · {job.workModel === 'remote' ? 'Remote' : job.jobLocation} · Posted {formatRelativeTime(job.postingDate)}
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 13, flexWrap: 'wrap' }}>
                   {sponsorsVisa(job) && (
@@ -143,12 +143,15 @@ export function JobDetailPage() {
                       ✓ Sponsorship
                     </span>
                   )}
-                  <Pill>{formatEmploymentType(job.employmentType)}</Pill>
-                  {job.remote && <Pill>Remote</Pill>}
+                  <Pill>{formatJobType(job.jobType)}</Pill>
+                  {job.workModel && <Pill>{formatWorkModel(job.workModel)}</Pill>}
+                  {job.season && <Pill>{job.season}</Pill>}
                 </div>
               </div>
-              <Link
-                to="/register"
+              <a
+                href={job.applicationLink}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   position: 'relative',
                   fontWeight: 700,
@@ -161,43 +164,45 @@ export function JobDetailPage() {
                   cursor: 'pointer',
                   boxShadow: '0 12px 26px -8px rgba(70,201,138,0.6)',
                   textDecoration: 'none',
+                  display: 'inline-block',
                 }}
               >
                 ↗ Apply
-              </Link>
+              </a>
             </div>
 
             {/* Summary cards */}
             <div
               style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginTop: 20 }}
             >
-              <InfoCard label="Role overview" p={p}>
-                <p style={{ fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0 }}>
-                  {job.description}
-                </p>
-              </InfoCard>
-              <InfoCard label="Skills & tags" p={p}>
-                {job.tags.length > 0 ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
-                    {job.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        style={{
-                          fontWeight: 600,
-                          fontSize: 13.5,
-                          color: p.accent,
-                          background: p.accentSoftBg,
-                          border: `1px solid ${p.accentBorder}`,
-                          borderRadius: 9,
-                          padding: '7px 14px',
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+              <InfoCard label="AI Role Summary" p={p}>
+                {job.jobSummary ? (
+                  <p style={{ fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0 }}>
+                    {job.jobSummary}
+                  </p>
                 ) : (
-                  <p style={{ fontSize: 14.5, color: p.muted, margin: 0 }}>No tags listed.</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <p style={{ fontSize: 13.5, color: p.muted, margin: 0, fontStyle: 'italic' }}>
+                      AI role summary will generate when full description is indexed...
+                    </p>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                )}
+              </InfoCard>
+              <InfoCard label="AI Company Summary" p={p}>
+                {job.companySummary ? (
+                  <p style={{ fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0 }}>
+                    {job.companySummary}
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <p style={{ fontSize: 13.5, color: p.muted, margin: 0, fontStyle: 'italic' }}>
+                      AI company summary will generate when full description is indexed...
+                    </p>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-4/6" />
+                  </div>
                 )}
               </InfoCard>
             </div>
@@ -227,18 +232,18 @@ export function JobDetailPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '22px 32px' }}>
                 <Detail
                   label="Location"
-                  value={job.remote ? `${job.location} (Remote)` : job.location}
+                  value={job.workModel === 'remote' ? `${job.jobLocation} (Remote)` : job.jobLocation}
                   p={p}
                 />
                 <Detail
                   label="Employment type"
-                  value={formatEmploymentType(job.employmentType)}
+                  value={formatJobType(job.jobType)}
                   p={p}
                 />
-                <Detail label="Compensation" value={formatSalary(job)} p={p} />
+                <Detail label="Applicants" value={formatApplicants(job.numberOfApplicants)} p={p} />
                 <Detail
-                  label="Status"
-                  value={job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                  label="Work Model"
+                  value={formatWorkModel(job.workModel)}
                   p={p}
                 />
               </div>

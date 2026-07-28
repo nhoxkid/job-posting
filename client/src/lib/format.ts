@@ -2,64 +2,33 @@
  * Presentation helpers. Pure functions for formatting domain values.
  */
 
-import type { Job } from '../types/job'
+import type { Job, JobType, WorkModel } from '../types/job'
 
-const EMPLOYMENT_LABELS: Record<string, string> = {
-  'full-time': 'Full-time',
-  'part-time': 'Part-time',
-  contract: 'Contract',
+const JOB_TYPE_LABELS: Record<string, string> = {
   internship: 'Internship',
-  temporary: 'Temporary',
+  'new grad': 'New Grad',
 }
 
-/** Turn "full-time" into a display label like "Full-time". */
-export function formatEmploymentType(type: string): string {
-  return EMPLOYMENT_LABELS[type] ?? type
+/** Turn "internship" into a display label like "Internship". */
+export function formatJobType(type: JobType | string): string {
+  return JOB_TYPE_LABELS[type] ?? type
 }
 
-/**
- * `Intl.NumberFormat` is costly to construct, so cache one formatter per
- * currency. Job lists render this hundreds of times — building it once per
- * currency instead of once per call is the difference that matters.
- */
-const currencyFormatters = new Map<string, Intl.NumberFormat>()
-
-function currencyFormatter(currency: string): Intl.NumberFormat {
-  let formatter = currencyFormatters.get(currency)
-  if (!formatter) {
-    formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    })
-    currencyFormatters.set(currency, formatter)
-  }
-  return formatter
+const WORK_MODEL_LABELS: Record<string, string> = {
+  'In-person': 'In-person',
+  remote: 'Remote',
+  hybrid: 'Hybrid',
 }
 
-/** Format a salary range, e.g. "$80,000 – $110,000" or "$45/hr". */
-export function formatSalary(job: Pick<Job, 'salaryMin' | 'salaryMax' | 'currency'>): string {
-  const { salaryMin, salaryMax } = job
-  if (salaryMin == null && salaryMax == null) return 'Not disclosed'
-
-  const currency = job.currency || 'USD'
-  const fmt = (value: number) => {
-    try {
-      return currencyFormatter(currency).format(value)
-    } catch {
-      return `${currency} ${value.toLocaleString()}`
-    }
-  }
-
-  if (salaryMin != null && salaryMax != null) {
-    return salaryMin === salaryMax ? fmt(salaryMin) : `${fmt(salaryMin)} – ${fmt(salaryMax)}`
-  }
-  return fmt((salaryMin ?? salaryMax) as number)
+/** Turn "remote" into a display label like "Remote". */
+export function formatWorkModel(model: WorkModel | string | null): string {
+  if (!model) return 'Not specified'
+  return WORK_MODEL_LABELS[model] ?? model
 }
 
-/** Format an ISO timestamp as a short relative time, e.g. "3h ago", "2d ago". */
-export function formatRelativeTime(iso: string): string {
-  const then = new Date(iso).getTime()
+/** Format an ISO date or date string as a short relative time, e.g. "3h ago", "2d ago". */
+export function formatRelativeTime(dateStr: string): string {
+  const then = new Date(dateStr).getTime()
   if (Number.isNaN(then)) return ''
   const diffMs = Date.now() - then
   const sec = Math.round(diffMs / 1000)
@@ -73,4 +42,20 @@ export function formatRelativeTime(iso: string): string {
   const months = Math.round(days / 30)
   if (months < 12) return `${months}mo ago`
   return `${Math.round(months / 12)}y ago`
+}
+
+/** Format number of applicants as a display string. */
+export function formatApplicants(count: number): string {
+  if (count === 0) return 'No applicants yet'
+  if (count === 1) return '1 applicant'
+  return `${count} applicants`
+}
+
+/** Legacy aliases for backward compatibility with older components. */
+export function formatEmploymentType(type: string): string {
+  return formatJobType(type)
+}
+
+export function formatSalary(job: Pick<Job, 'numberOfApplicants'>): string {
+  return formatApplicants(job.numberOfApplicants)
 }

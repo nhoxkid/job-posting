@@ -5,9 +5,9 @@
 
 import type { Job } from '../types/job'
 
-/** A job "sponsors visas" when it carries the conventional sponsorship tag. */
-export function sponsorsVisa(job: Pick<Job, 'tags'>): boolean {
-  return job.tags.some((tag) => /sponsor/i.test(tag))
+/** Whether the job sponsors visas — now uses the direct boolean field. */
+export function sponsorsVisa(job: Pick<Job, 'sponsorshipAvailable'>): boolean {
+  return job.sponsorshipAvailable
 }
 
 /** Two-letter monogram for a company avatar, e.g. "Acme Labs" -> "AL". */
@@ -30,8 +30,10 @@ export function logoColors(company: string): { bg: string; fg: string } {
   return LOGO_PALETTES[hash % LOGO_PALETTES.length]
 }
 
-/** "San Francisco, US" stays; remote roles get a "Remote" prefix when needed. */
-export function displayLocation(job: Pick<Job, 'location' | 'remote'>): string {
-  if (job.remote && !/remote/i.test(job.location)) return `Remote · ${job.location}`
-  return job.location
+/** Display the job location, prefixing "Remote" if workModel is remote. */
+export function displayLocation(job: Pick<Job, 'jobLocation' | 'workModel'>): string {
+  if (job.workModel === 'remote' && !/remote/i.test(job.jobLocation)) {
+    return `Remote · ${job.jobLocation}`
+  }
+  return job.jobLocation
 }

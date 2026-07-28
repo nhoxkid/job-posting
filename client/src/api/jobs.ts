@@ -8,9 +8,10 @@ import { apiClient, type QueryParams } from './client'
 function toParams(query: JobQuery): QueryParams {
   return {
     search: query.search,
-    employmentType: query.employmentType,
-    remote: query.remote,
-    status: query.status,
+    jobType: query.jobType,
+    workModel: query.workModel,
+    sponsorship: query.sponsorship,
+    active: query.active,
     page: query.page,
     pageSize: query.pageSize,
   }
@@ -20,12 +21,12 @@ export const jobsApi = {
   list: (query: JobQuery = {}): Promise<Paginated<Job>> =>
     apiClient.get<Paginated<Job>>('/jobs', toParams(query)),
 
-  get: (id: string): Promise<Job> => apiClient.get<Job>(`/jobs/${id}`),
+  get: (id: number): Promise<Job> => apiClient.get<Job>(`/jobs/${id}`),
 
   create: (input: CreateJobInput): Promise<Job> => apiClient.post<Job>('/jobs', input),
 
-  update: (id: string, input: UpdateJobInput): Promise<Job> =>
+  update: (id: number, input: UpdateJobInput): Promise<Job> =>
     apiClient.patch<Job>(`/jobs/${id}`, input),
 
-  remove: (id: string): Promise<void> => apiClient.delete<void>(`/jobs/${id}`),
+  remove: (id: number): Promise<void> => apiClient.delete<void>(`/jobs/${id}`),
 }

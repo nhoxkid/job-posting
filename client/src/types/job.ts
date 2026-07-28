@@ -5,48 +5,50 @@
  * Keep them in sync with the server-side schema.
  */
 
-export const EMPLOYMENT_TYPES = [
-  'full-time',
-  'part-time',
-  'contract',
-  'internship',
-  'temporary',
-] as const
+export const JOB_TYPES = ['internship', 'new grad'] as const
 
-export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number]
+export type JobType = (typeof JOB_TYPES)[number]
 
-export type JobStatus = 'open' | 'closed' | 'draft'
+export const WORK_MODELS = ['In-person', 'remote', 'hybrid'] as const
+
+export type WorkModel = (typeof WORK_MODELS)[number]
 
 export interface Job {
-  id: string
-  title: string
-  company: string
-  location: string
-  remote: boolean
-  employmentType: EmploymentType
-  description: string
-  tags: string[]
-  salaryMin: number | null
-  salaryMax: number | null
-  currency: string
-  status: JobStatus
-  createdAt: string
-  updatedAt: string
+  jobId: number
+  employerName: string
+  position: string
+  jobType: JobType
+  jobLocation: string
+  jobSummary: string | null
+  companySummary: string | null
+  postingDate: string
+  workModel: WorkModel | null
+  sponsorshipAvailable: boolean
+  applicationDeadline: string | null
+  applicationLink: string
+  numberOfApplicants: number
+  sourceId: string | null
+  sourceRepo: string | null
+  descriptionRaw: string | null
+  season: string | null
+  active: boolean
 }
 
 /** Payload for creating a job posting. */
 export interface CreateJobInput {
-  title: string
-  company: string
-  location: string
-  remote?: boolean
-  employmentType: EmploymentType
-  description: string
-  tags?: string[]
-  salaryMin?: number | null
-  salaryMax?: number | null
-  currency?: string
-  status?: JobStatus
+  employerName: string
+  position: string
+  jobType: JobType
+  jobLocation: string
+  applicationLink: string
+  workModel?: WorkModel
+  sponsorshipAvailable?: boolean
+  jobSummary?: string
+  companySummary?: string
+  postingDate?: string
+  applicationDeadline?: string
+  season?: string
+  active?: boolean
 }
 
 /** Payload for updating a job posting (all fields optional). */
@@ -55,9 +57,10 @@ export type UpdateJobInput = Partial<CreateJobInput>
 /** Query parameters accepted by the list endpoint. */
 export interface JobQuery {
   search?: string
-  employmentType?: EmploymentType
-  remote?: boolean
-  status?: JobStatus
+  jobType?: JobType
+  workModel?: WorkModel
+  sponsorship?: boolean
+  active?: boolean
   page?: number
   pageSize?: number
 }

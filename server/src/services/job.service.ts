@@ -2,13 +2,15 @@
  * Job service: business logic layer (HTTP- and storage-agnostic).
  *
  * Depends on the `JobRepository` interface. Validates input, applies defaults,
- * and shapes the paginated envelope returned to the controller.
+ * shapes paginated responses, and coordinates on-demand AI enrichment.
  */
 
-import { EMPLOYMENT_TYPES, JOB_STATUSES } from '../models/job'
+import { JOB_TYPES } from '../models/job'
 import type { CreateJobInput, Job, JobQuery, UpdateJobInput } from '../models/job'
 import { jobRepository, type JobRepository } from '../repositories/job.repository'
 import { ApiError } from '../utils/ApiError'
+import { enrichmentService } from './enrichment.service'
+import { geminiService } from './gemini.service'
 
 export interface Paginated<T> {
   data: T[]
@@ -32,32 +34,32 @@ function parseCreateInput(body: unknown): CreateJobInput {
   }
   const b = body as Record<string, unknown>
 
-  const employmentType = requireString(b.employmentType, 'employmentType')
-  if (!EMPLOYMENT_TYPES.includes(employmentType as never)) {
-    throw ApiError.badRequest(
-      `"employmentType" must be one of: ${EMPLOYMENT_TYPES.join(', ')}`,
-    )
+  const jobType = b.jobType === undefined ? 'internship' : requireString(b.jobType, 'jobType')
+  if (!JOB_TYPES.includes(jobType as never)) {
+    throw ApiError.badRequest(`"jobType" must be one of: ${JOB_TYPES.join(', ')}`)
   }
-
-  const status = b.status === undefined ? 'open' : requireString(b.status, 'status')
-  if (!JOB_STATUSES.includes(status as never)) {
-    throw ApiError.badRequest(`"status" must be one of: ${JOB_STATUSES.join(', ')}`)
-  }
-
-  const tags = Array.isArray(b.tags) ? b.tags.filter((t): t is string => typeof t === 'string') : []
 
   return {
-    title: requireString(b.title, 'title'),
-    company: requireString(b.company, 'company'),
-    location: requireString(b.location, 'location'),
-    remote: Boolean(b.remote),
-    employmentType: employmentType as CreateJobInput['employmentType'],
-    description: requireString(b.description, 'description'),
-    tags,
-    salaryMin: typeof b.salaryMin === 'number' ? b.salaryMin : null,
-    salaryMax: typeof b.salaryMax === 'number' ? b.salaryMax : null,
-    currency: typeof b.currency === 'string' && b.currency.trim() ? b.currency.trim() : 'USD',
-    status: status as CreateJobInput['status'],
+    employerName: requireString(b.employerName, 'employerName'),
+    position: requireString(b.position, 'position'),
+    jobType: jobType as CreateJobInput['jobType'],
+    jobLocation: requireString(b.jobLocation, 'jobLocation'),
+    workModel:
+      typeof b.workModel === 'string'
+        ? (b.workModel as CreateJobInput['workModel'])
+        : 'In-person',
+    sponsorshipAvailable: Boolean(b.sponsorshipAvailable),
+    applicationLink: requireString(b.applicationLink, 'applicationLink'),
+    jobSummary: typeof b.jobSummary === 'string' ? b.jobSummary.trim() : undefined,
+    companySummary: typeof b.companySummary === 'string' ? b.companySummary.trim() : undefined,
+    postingDate: typeof b.postingDate === 'string' ? b.postingDate : undefined,
+    applicationDeadline:
+      typeof b.applicationDeadline === 'string' ? b.applicationDeadline : undefined,
+    sourceId: typeof b.sourceId === 'string' ? b.sourceId : undefined,
+    sourceRepo: typeof b.sourceRepo === 'string' ? b.sourceRepo : undefined,
+    descriptionRaw: typeof b.descriptionRaw === 'string' ? b.descriptionRaw : undefined,
+    season: typeof b.season === 'string' ? b.season : undefined,
+    active: typeof b.active === 'boolean' ? b.active : undefined,
   }
 }
 
@@ -77,9 +79,31 @@ export class JobService {
     }
   }
 
-  async getById(id: string): Promise<Job> {
-    const job = await this.repo.findById(id)
+  async getById(id: number): Promise<Job> {
+    let job = await this.repo.findById(id)
     if (!job) throw ApiError.notFound(`Job "${id}" not found`)
+
+    // On-demand AI enrichment: if summaries are missing, scrape description & call Gemini
+    if (!job.jobSummary || !job.companySummary) {
+      let descriptionRaw = job.descriptionRaw
+      if (!descriptionRaw) {
+        descriptionRaw = await enrichmentService.fetchJobDescription(job.applicationLink)
+      }
+
+      const summaries = await geminiService.generateSummaries(
+        job.employerName,
+        job.position,
+        descriptionRaw,
+      )
+
+      const updated = await this.repo.update(id, {
+        descriptionRaw: descriptionRaw ?? undefined,
+        jobSummary: summaries.roleSummary,
+        companySummary: summaries.companySummary,
+      })
+      if (updated) job = updated
+    }
+
     return job
   }
 
@@ -87,13 +111,13 @@ export class JobService {
     return this.repo.create(parseCreateInput(input))
   }
 
-  async update(id: string, input: UpdateJobInput): Promise<Job> {
+  async update(id: number, input: UpdateJobInput): Promise<Job> {
     const updated = await this.repo.update(id, input)
     if (!updated) throw ApiError.notFound(`Job "${id}" not found`)
     return updated
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: number): Promise<void> {
     const deleted = await this.repo.delete(id)
     if (!deleted) throw ApiError.notFound(`Job "${id}" not found`)
   }

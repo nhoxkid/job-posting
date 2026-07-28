@@ -7,7 +7,7 @@
  */
 
 import type { Request, Response } from 'express'
-import type { EmploymentType, JobQuery, JobStatus } from '../models/job'
+import type { JobQuery, JobType, WorkModel } from '../models/job'
 import { jobService } from '../services/job.service'
 
 /** Parse and coerce list query params from their string representations. */
@@ -15,9 +15,10 @@ function parseListQuery(q: Request['query']): JobQuery {
   const query: JobQuery = {}
 
   if (typeof q.search === 'string' && q.search.trim()) query.search = q.search.trim()
-  if (typeof q.employmentType === 'string') query.employmentType = q.employmentType as EmploymentType
-  if (typeof q.status === 'string') query.status = q.status as JobStatus
-  if (typeof q.remote === 'string') query.remote = q.remote === 'true'
+  if (typeof q.jobType === 'string') query.jobType = q.jobType as JobType
+  if (typeof q.workModel === 'string') query.workModel = q.workModel as WorkModel
+  if (typeof q.sponsorship === 'string') query.sponsorship = q.sponsorship === 'true'
+  if (typeof q.active === 'string') query.active = q.active === 'true'
 
   const page = Number(q.page)
   if (Number.isFinite(page) && page > 0) query.page = page
@@ -34,7 +35,12 @@ export const jobController = {
   },
 
   getById: async (req: Request, res: Response): Promise<void> => {
-    const job = await jobService.getById(req.params.id)
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: 'Invalid job ID' })
+      return
+    }
+    const job = await jobService.getById(id)
     res.json(job)
   },
 
@@ -44,12 +50,22 @@ export const jobController = {
   },
 
   update: async (req: Request, res: Response): Promise<void> => {
-    const job = await jobService.update(req.params.id, req.body)
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: 'Invalid job ID' })
+      return
+    }
+    const job = await jobService.update(id, req.body)
     res.json(job)
   },
 
   remove: async (req: Request, res: Response): Promise<void> => {
-    await jobService.remove(req.params.id)
+    const id = Number(req.params.id)
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: 'Invalid job ID' })
+      return
+    }
+    await jobService.remove(id)
     res.status(204).end()
   },
 }

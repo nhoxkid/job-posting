@@ -36,10 +36,10 @@ export default function RoleVault() {
 	}, [])
 
 	useEffect(() => {
-		const nextRecommendations = computeRecommendations(detectedSkills)
+		const nextRecommendations = computeRecommendations(detectedSkills, jobs)
 		setRecommendations(nextRecommendations)
 		window.localStorage.setItem('rv-detected-skills', JSON.stringify(detectedSkills))
-	}, [detectedSkills])
+	}, [detectedSkills, jobs])
 
 	const selectJob = (id?: number) => {
 		if (!id) return
@@ -61,7 +61,7 @@ export default function RoleVault() {
 				.rv-faq-card:hover { border-color: var(--rv-hover-card-border) !important; }
 			`}</style>
 			<div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: palette.ink, background: palette.pageBg, minHeight: '100vh', WebkitFontSmoothing: 'antialiased', transition: 'background 0.2s, color 0.2s' }}>
-				{screen === 'landing' && <LandingScreen go={go} selectJob={selectJob} featuredHomeJobs={featuredHomeJobs} />}
+				{screen === 'landing' && <LandingScreen go={go} selectJob={selectJob} featuredHomeJobs={jobs.slice(0, 6)} />}
 				{screen === 'browse' && <BrowseScreen go={go} selectJob={selectJob} jobs={jobs} />}
 				{screen === 'detail' && <DetailScreen go={go} jobId={selectedJobId} />}
 				{screen === 'login' && <AuthScreen mode='login' go={go} />}
