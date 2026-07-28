@@ -25,18 +25,19 @@ export function RecommendedScreen({ go, recommendations, selectJob, resumeName }
 				{recommendations.length ? (
 					<>
 						<div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-							{recommendations.slice(0, 5).map((r) => (
-								<div key={r.job.id} onClick={() => selectJob(r.job.id)} className='rv-rec-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 16, padding: '22px 24px', cursor: 'pointer', display: 'flex', gap: 20, alignItems: 'center', transition: 'box-shadow .15s,border-color .15s' }}>
+							{recommendations.slice(0, 5).map((r) => {
+								const typeLabel = r.job.jobType === 'new grad' ? 'New Grad' : 'Internship'
+								return (
+								<div key={r.job.jobId} onClick={() => selectJob(r.job.jobId)} className='rv-rec-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 16, padding: '22px 24px', cursor: 'pointer', display: 'flex', gap: 20, alignItems: 'center', transition: 'box-shadow .15s,border-color .15s' }}>
 									<div style={{ flex: 1, minWidth: 0 }}>
 										<div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-											<span style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 17, color: p.ink }}>{r.job.title} · {r.job.company}</span>
-											<span style={{ fontSize: 13.5, color: p.muted }}>{r.job.loc} · {r.job.posted}</span>
+											<span style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 17, color: p.ink }}>{r.job.position} · {r.job.employerName}</span>
+											<span style={{ fontSize: 13.5, color: p.muted }}>{r.job.jobLocation} · {r.job.postingDate || 'Recent'}</span>
 										</div>
-										<div style={{ fontSize: 14, color: p.body, marginBottom: 12 }}><span style={{ color: p.muted }}>Matches:</span> {r.matches.join(', ')} <span style={{ color: p.accent, fontWeight: 600 }}>— {r.matches.length} of {r.job.skills.length} skills detected</span></div>
+										<div style={{ fontSize: 14, color: p.body, marginBottom: 12 }}><span style={{ color: p.muted }}>Matches:</span> {r.matches.join(', ')} <span style={{ color: p.accent, fontWeight: 600 }}>— {r.matches.length} keyword matches</span></div>
 										<div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-											{r.job.spons ? <span style={{ fontWeight: 600, fontSize: 12, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '4px 11px' }}>✓ Sponsorship</span> : <span style={{ fontWeight: 600, fontSize: 12, color: p.muted, background: p.chipBg, borderRadius: 999, padding: '4px 11px' }}>✗ No sponsorship</span>}
-											<span style={{ fontWeight: 600, fontSize: 12, color: p.body, background: p.surface, border: `1px solid ${p.border}`, borderRadius: 999, padding: '4px 11px' }}>{r.job.type}</span>
-											<span style={{ fontSize: 12.5, color: p.muted }}>{r.job.applied} applications</span>
+											{r.job.sponsorshipAvailable ? <span style={{ fontWeight: 600, fontSize: 12, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '4px 11px' }}>✓ Sponsorship</span> : <span style={{ fontWeight: 600, fontSize: 12, color: p.muted, background: p.chipBg, borderRadius: 999, padding: '4px 11px' }}>✗ No sponsorship</span>}
+											<span style={{ fontWeight: 600, fontSize: 12, color: p.body, background: p.surface, border: `1px solid ${p.border}`, borderRadius: 999, padding: '4px 11px' }}>{typeLabel}</span>
 										</div>
 									</div>
 									<div style={{ textAlign: 'center', flexShrink: 0, width: 96 }}>
@@ -44,7 +45,8 @@ export function RecommendedScreen({ go, recommendations, selectJob, resumeName }
 										<div style={{ fontSize: 12, fontWeight: 600, color: p.muted, marginTop: 3, letterSpacing: '0.03em' }}>MATCH</div>
 									</div>
 								</div>
-							))}
+								)
+							})}
 						</div>
 						<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: p.surfaceMuted, border: `1px solid ${p.borderSubtle}`, borderRadius: 14, padding: '16px 22px', marginTop: 18 }}>
 							<span style={{ fontSize: 14, color: p.muted }}>Showing top <strong style={{ color: p.ink }}>{Math.min(5, recommendations.length)}</strong> of {recommendations.length} matches</span>

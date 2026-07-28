@@ -1,10 +1,8 @@
 import type { RoleVaultScreen } from '../types'
 import type { CSSProperties } from 'react'
-import { featuredHomeJobs as featuredJobs } from '../../jobs/rolevault'
+import type { Job } from '../../../types/job'
 import { ThemeToggle } from '../../../components/ui/ThemeToggle'
 import { usePalette } from '../../../lib/palette'
-
-type FeaturedHomeJob = (typeof featuredJobs)[number]
 
 /** One pass of the hero ticker. */
 const MARQUEE_COMPANIES = ['Northwind', 'Lumen', 'Vela', 'Quanta AI', 'Beacon', 'Forge', 'Acme Labs', 'Halcyon']
@@ -23,7 +21,7 @@ const MARQUEE_COPIES = 6
 export type LandingScreenProps = {
 	go: (s: RoleVaultScreen) => void
 	selectJob: (id?: number) => void
-	featuredHomeJobs: FeaturedHomeJob[]
+	featuredHomeJobs: Job[]
 }
 
 export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreenProps) {
@@ -92,13 +90,15 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 								{ top: 190, left: 0, right: undefined, width: 294, delay: '0.5s', match: 88, spons: false },
 								{ top: 334, right: 34, left: undefined, width: 286, delay: '0.9s', match: 71, spons: false },
 							][index]
+							const typeLabel = job.jobType === 'new grad' ? 'New Grad' : 'Internship'
+							const initials = job.employerName ? job.employerName.slice(0, 2).toUpperCase() : 'RV'
 							return (
-								<div key={job.id} onClick={() => selectJob(job.id)} style={{ position: 'absolute', top: cardLayout.top, right: cardLayout.right, left: cardLayout.left, width: cardLayout.width, cursor: 'pointer', background: p.floatCardBg, color: p.ink, borderRadius: 20, padding: 18, boxShadow: cardLayout.match === 94 ? `0 36px 70px -22px rgba(0,0,0,0.6),0 0 0 2px ${p.heroGlow}` : '0 36px 70px -24px rgba(0,0,0,0.55)', animation: `floaty 6.5s ease-in-out infinite ${cardLayout.delay}` } as CSSProperties}>
+								<div key={job.jobId} onClick={() => selectJob(job.jobId)} style={{ position: 'absolute', top: cardLayout.top, right: cardLayout.right, left: cardLayout.left, width: cardLayout.width, cursor: 'pointer', background: p.floatCardBg, color: p.ink, borderRadius: 20, padding: 18, boxShadow: cardLayout.match === 94 ? `0 36px 70px -22px rgba(0,0,0,0.6),0 0 0 2px ${p.heroGlow}` : '0 36px 70px -24px rgba(0,0,0,0.55)', animation: `floaty 6.5s ease-in-out infinite ${cardLayout.delay}` } as CSSProperties}>
 									<div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-										<div style={{ width: 44, height: 44, borderRadius: 12, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 15 }}>{job.initials}</div>
+										<div style={{ width: 44, height: 44, borderRadius: 12, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 15 }}>{initials}</div>
 										<div style={{ flex: 1, minWidth: 0 }}>
-											<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 15 }}>{job.title}</div>
-											<div style={{ fontSize: 12.5, color: p.muted }}>{job.company} · {job.loc}</div>
+											<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 15 }}>{job.position}</div>
+											<div style={{ fontSize: 12.5, color: p.muted }}>{job.employerName} · {job.jobLocation}</div>
 										</div>
 										<div style={{ textAlign: 'right' }}>
 											<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 19, color: p.accent, lineHeight: 1 }}>{cardLayout.match}%</div>
@@ -107,8 +107,8 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 									</div>
 									<div style={{ height: 6, borderRadius: 999, background: p.chipBg, marginTop: 14, overflow: 'hidden' }}><div style={{ width: `${cardLayout.match}%`, height: '100%', background: p.matchBarFill }} /></div>
 									<div style={{ display: 'flex', gap: 6, marginTop: 13 }}>
-										{cardLayout.spons ? <span style={{ fontSize: 11, fontWeight: 600, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '3px 9px' }}>✓ Sponsors</span> : <span style={{ fontSize: 11, fontWeight: 600, color: p.body, background: p.chipBg, borderRadius: 999, padding: '3px 9px' }}>No sponsorship</span>}
-										<span style={{ fontSize: 11, fontWeight: 600, color: p.body, background: p.chipBg, borderRadius: 999, padding: '3px 9px' }}>{job.type}</span>
+										{job.sponsorshipAvailable ? <span style={{ fontSize: 11, fontWeight: 600, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '3px 9px' }}>✓ Sponsors</span> : <span style={{ fontSize: 11, fontWeight: 600, color: p.body, background: p.chipBg, borderRadius: 999, padding: '3px 9px' }}>No sponsorship</span>}
+										<span style={{ fontSize: 11, fontWeight: 600, color: p.body, background: p.chipBg, borderRadius: 999, padding: '3px 9px' }}>{typeLabel}</span>
 									</div>
 								</div>
 							)
@@ -140,21 +140,24 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 						<button onClick={() => go('browse')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 600, fontSize: 14, color: p.accent, background: p.surface, border: `1px solid ${p.accentBorder}`, borderRadius: 11, padding: '11px 18px', cursor: 'pointer' }}>Browse all 250 →</button>
 					</div>
 					<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 18 }}>
-						{featuredHomeJobs.map((j) => (
-							<div key={j.id} onClick={() => selectJob(j.id)} className='rv-job-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 18, padding: 20, cursor: 'pointer', transition: 'box-shadow .18s,border-color .18s,transform .18s' }}>
-								<div style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
-									<div style={{ width: 46, height: 46, flexShrink: 0, borderRadius: 13, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 15 }}>{j.initials}</div>
-									<div style={{ minWidth: 0 }}>
-										<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 16.5, lineHeight: 1.25, color: p.ink }}>{j.title}</div>
-										<div style={{ fontSize: 13, color: p.muted, marginTop: 3 }}>{j.company} · {j.loc}</div>
+						{featuredHomeJobs.map((j) => {
+							const initials = j.employerName ? j.employerName.slice(0, 2).toUpperCase() : 'RV'
+							return (
+								<div key={j.jobId} onClick={() => selectJob(j.jobId)} className='rv-job-card' style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 18, padding: 20, cursor: 'pointer', transition: 'box-shadow .18s,border-color .18s,transform .18s' }}>
+									<div style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
+										<div style={{ width: 46, height: 46, flexShrink: 0, borderRadius: 13, background: p.accentSoftBg, color: p.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Schibsted Grotesk'", fontWeight: 800, fontSize: 15 }}>{initials}</div>
+										<div style={{ minWidth: 0 }}>
+											<div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 16.5, lineHeight: 1.25, color: p.ink }}>{j.position}</div>
+											<div style={{ fontSize: 13, color: p.muted, marginTop: 3 }}>{j.employerName} · {j.jobLocation}</div>
+										</div>
+									</div>
+									<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
+										{j.sponsorshipAvailable ? <span style={{ fontWeight: 600, fontSize: 12, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '5px 11px' }}>✓ Sponsors visa</span> : <span style={{ fontWeight: 600, fontSize: 12, color: p.muted, background: p.chipBg, borderRadius: 999, padding: '5px 11px' }}>No sponsorship</span>}
+										<span style={{ fontSize: 12.5, color: p.muted }}>{j.postingDate || 'Recent'}</span>
 									</div>
 								</div>
-								<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
-									{j.spons ? <span style={{ fontWeight: 600, fontSize: 12, color: p.accent, background: p.accentSoftBg, borderRadius: 999, padding: '5px 11px' }}>✓ Sponsors visa</span> : <span style={{ fontWeight: 600, fontSize: 12, color: p.muted, background: p.chipBg, borderRadius: 999, padding: '5px 11px' }}>No sponsorship</span>}
-									<span style={{ fontSize: 12.5, color: p.muted }}>{j.time}</span>
-								</div>
-							</div>
-						))}
+							)
+						})}
 					</div>
 				</div>
 			</section>
