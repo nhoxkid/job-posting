@@ -176,13 +176,22 @@ button:disabled::after {
   opacity: 0;
 }
 
-/* Span-based click targets (see components/ui/Clickable.tsx). Sized to their
- * own text so hover can't extend across a stretched flex row, and non-selecting
- * so a click reads as a press rather than dragging a text selection. */
+/* Click targets built with components/ui/Clickable.tsx. Non-selecting so a
+ * click reads as a press rather than the start of a text selection. */
 .rv-clickable {
-  width: fit-content;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Only the *text* targets hug their content.
+ *
+ * This used to apply to every `.rv-clickable`, which quietly broke the Browse
+ * table: its rows are Clickables too, and `fit-content` made each row only as
+ * wide as its own content. Every row then resolved its `fr` columns against a
+ * different width, so no two rows lined up. Block-level targets — table rows,
+ * job cards — must fill their container instead. */
+span.rv-clickable {
+  width: fit-content;
 }
 
 @media (prefers-reduced-motion: reduce) {

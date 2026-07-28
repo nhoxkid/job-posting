@@ -15,6 +15,20 @@ type BrowseFilters = {
 	sponsorship: 'any' | Sponsorship
 }
 
+/**
+ * Column tracks for the results table, shared by the header and every row.
+ *
+ * Each row is its own grid container, so the header and rows only line up if
+ * they resolve identical tracks — one constant, not two copies that can drift.
+ *
+ * `minmax(0, Nfr)` rather than a bare `Nfr`: an `fr` track has an implicit
+ * min-content floor, so a long unbreakable job title would widen that row's
+ * first column and shift every column after it out of line with its neighbours.
+ * A zero minimum lets the track shrink and keeps the grid deterministic.
+ */
+const TABLE_COLUMNS =
+  'minmax(0, 2.4fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.8fr)'
+
 const DEFAULT_FILTERS: BrowseFilters = {
 	query: '',
 	types: ['Internship', 'New Grad'],
@@ -158,13 +172,13 @@ export function BrowseScreen({ go, selectJob, jobs, error = null }: BrowseScreen
 				</aside>
 
 				<section style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: p.shadow }}>
-					<div style={{ display: 'grid', gridTemplateColumns: '2.4fr 1.4fr 1fr 1.1fr 1fr 0.8fr', gap: 12, padding: '15px 22px', background: p.surfaceMuted, borderBottom: `1px solid ${p.borderSubtle}`, fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 12, letterSpacing: '0.04em', textTransform: 'uppercase', color: p.muted }}>
+					<div style={{ display: 'grid', gridTemplateColumns: TABLE_COLUMNS, gap: 12, padding: '15px 22px', background: p.surfaceMuted, borderBottom: `1px solid ${p.borderSubtle}`, fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 12, letterSpacing: '0.04em', textTransform: 'uppercase', color: p.muted }}>
 						<div>Role / Company</div><div>Location</div><div>Type</div><div>Sponsorship</div><div>Posted</div><div style={{ textAlign: 'right' }}>Applied</div>
 					</div>
 					{pageJobs.length ? pageJobs.map((job) => (
-						<Clickable as='div' key={job.id} onClick={() => selectJob(job.id)} label={`View ${job.title} at ${job.company}`} className='rv-table-row' style={{ display: 'grid', gridTemplateColumns: '2.4fr 1.4fr 1fr 1.1fr 1fr 0.8fr', gap: 12, padding: '16px 22px', borderBottom: `1px solid ${p.borderSubtle}`, alignItems: 'center', cursor: 'pointer', transition: 'background .12s' }}>
-							<div><div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 15, color: p.ink }}>{job.title}</div><div style={{ fontSize: 13, color: p.muted, marginTop: 2 }}>{job.company}</div></div>
-							<div style={{ fontSize: 13.5, color: p.body }}>{job.loc}</div>
+						<Clickable as='div' key={job.id} onClick={() => selectJob(job.id)} label={`View ${job.title} at ${job.company}`} className='rv-table-row' style={{ display: 'grid', gridTemplateColumns: TABLE_COLUMNS, gap: 12, padding: '16px 22px', borderBottom: `1px solid ${p.borderSubtle}`, alignItems: 'center', cursor: 'pointer', transition: 'background .12s' }}>
+							<div style={{ minWidth: 0, overflowWrap: 'anywhere' }}><div style={{ fontFamily: "'Schibsted Grotesk'", fontWeight: 700, fontSize: 15, color: p.ink }}>{job.title}</div><div style={{ fontSize: 13, color: p.muted, marginTop: 2 }}>{job.company}</div></div>
+							<div style={{ fontSize: 13.5, color: p.body, minWidth: 0, overflowWrap: 'anywhere' }}>{job.loc}</div>
 							<div><span style={{ fontWeight: 600, fontSize: 12, color: p.body, background: p.chipBg, borderRadius: 999, padding: '4px 10px' }}>{job.type}</span></div>
 							<div><SponsorshipBadge sponsorship={job.sponsorship} short /></div>
 							<div style={{ fontSize: 13.5, color: p.muted }}>{formatRelativeTime(job.postedAt)}</div>
