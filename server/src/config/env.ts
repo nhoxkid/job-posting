@@ -14,7 +14,10 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isProduction: process.env.NODE_ENV === 'production',
 
-  host: process.env.HOST ?? '0.0.0.0',
+  // `::` binds dual-stack (IPv6 + IPv4-mapped). With `0.0.0.0` the server is
+  // IPv4-only, and on Windows `localhost` resolves to ::1 first — so the
+  // browser can fail to connect even though the port is open.
+  host: process.env.HOST ?? '::',
   port: Number(process.env.PORT ?? 4000),
 
   // Comma-separated list of allowed origins, or `*`.
