@@ -73,12 +73,20 @@ export function DetailScreen({ go, jobId }: DetailScreenProps) {
 
 						<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginTop: 20 }}>
 							{[
-								{ label: 'AI Role Summary', text: job?.jobSummary || '[AI Summary Unavailable - Please set GEMINI_API_KEY in server/.env]' },
-								{ label: 'AI Company Summary', text: job?.companySummary || '[Company Summary Unavailable - Please set GEMINI_API_KEY in server/.env]' },
+								{ label: 'AI Role Summary', text: job?.jobSummary || 'AI role summary is not available for this posting yet. Please visit the link by clicking Apply to see the role and company description.' },
+								{ label: 'AI Company Summary', text: job?.companySummary || 'AI company summary is not available for this posting yet. Please visit the link by clicking Apply to see the role and company description.' },
 							].map((card) => (
-								<div key={card.label} style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 18, padding: 24, boxShadow: p.shadow }}>
-									<div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: p.accentSoftBg, color: p.accent, fontWeight: 700, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', padding: '5px 11px', borderRadius: 999, marginBottom: 14 }}><span style={{ width: 6, height: 6, background: p.accent, borderRadius: '50%' }} />{card.label}</div>
-									<p style={{ fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0, whiteSpace: 'pre-wrap' }}>{card.text}</p>
+								<div key={card.label} style={{ background: p.surface, border: `1px solid ${p.border}`, borderRadius: 18, padding: 24, boxShadow: p.shadow, height: 240, boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+									<div style={{ display: 'inline-flex', alignItems: 'center', alignSelf: 'flex-start', flexShrink: 0, gap: 7, background: p.accentSoftBg, color: p.accent, fontWeight: 700, fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', padding: '5px 11px', borderRadius: 999, marginBottom: 14 }}><span style={{ width: 6, height: 6, background: p.accent, borderRadius: '50%' }} />{card.label}</div>
+									<p
+										className='rv-summary-scroll'
+										role='region'
+										aria-label={`${card.label} content`}
+										tabIndex={0}
+										style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 9, fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0, whiteSpace: 'pre-wrap' }}
+									>
+										{card.text}
+									</p>
 								</div>
 							))}
 						</div>

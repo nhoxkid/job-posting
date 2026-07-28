@@ -448,6 +448,10 @@ DB_DRIVER=memory
 
 # PostgreSQL (only used when DB_DRIVER=postgres)
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/job_posting
+
+# AI summaries
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
 | Variable | Default | Purpose |
@@ -458,6 +462,8 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/job_posting
 | `CORS_ORIGIN` | `http://localhost:5173` | allowed origin(s) |
 | `DB_DRIVER` | `memory` | data source: `memory` or `postgres` |
 | `DATABASE_URL` | local pg URL | connection string (only when `postgres`) |
+| `GEMINI_API_KEY` | none                    | enables grounded job and company summaries   |
+| `GEMINI_MODEL`   | `gemini-3.6-flash`      | Gemini model used for summary generation     |
 
 ### `client/.env`
 

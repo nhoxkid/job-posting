@@ -177,13 +177,14 @@ export function JobDetailPage() {
             >
               <InfoCard label="AI Role Summary" p={p}>
                 {job.jobSummary ? (
-                  <p style={{ fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0 }}>
+                  <p style={{ fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0, whiteSpace: 'pre-wrap' }}>
                     {job.jobSummary}
                   </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <p style={{ fontSize: 13.5, color: p.muted, margin: 0, fontStyle: 'italic' }}>
-                      AI role summary will generate when full description is indexed...
+                      AI role summary is not available for this posting yet. Please visit the link
+                      by clicking Apply to see the role and company description.
                     </p>
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-5/6" />
@@ -192,13 +193,14 @@ export function JobDetailPage() {
               </InfoCard>
               <InfoCard label="AI Company Summary" p={p}>
                 {job.companySummary ? (
-                  <p style={{ fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0 }}>
+                  <p style={{ fontSize: 14.5, lineHeight: 1.65, color: p.body, margin: 0, whiteSpace: 'pre-wrap' }}>
                     {job.companySummary}
                   </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <p style={{ fontSize: 13.5, color: p.muted, margin: 0, fontStyle: 'italic' }}>
-                      AI company summary will generate when full description is indexed...
+                      AI company summary is not available for this posting yet. Please visit the
+                      link by clicking Apply to see the role and company description.
                     </p>
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-4/6" />
@@ -286,12 +288,18 @@ function InfoCard({ label, children, p }: { label: string; children: ReactNode; 
         borderRadius: 18,
         padding: 24,
         boxShadow: p.shadow,
+        height: 240,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <div
         style={{
           display: 'inline-flex',
           alignItems: 'center',
+          alignSelf: 'flex-start',
+          flexShrink: 0,
           gap: 7,
           background: p.accentSoftBg,
           color: p.accent,
@@ -307,7 +315,15 @@ function InfoCard({ label, children, p }: { label: string; children: ReactNode; 
         <span style={{ width: 6, height: 6, background: p.accent, borderRadius: '50%' }} />
         {label}
       </div>
-      {children}
+      <div
+        className="rv-summary-scroll"
+        role="region"
+        aria-label={`${label} content`}
+        tabIndex={0}
+        style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 9 }}
+      >
+        {children}
+      </div>
     </div>
   )
 }

@@ -155,3 +155,33 @@
     transform: translateY(0);
   }
 }
+
+.rv-summary-scroll {
+  scrollbar-color: rgba(18, 128, 90, 0.48) transparent;
+  scrollbar-width: thin;
+}
+
+.rv-summary-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rv-summary-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rv-summary-scroll::-webkit-scrollbar-thumb {
+  background: rgba(18, 128, 90, 0.42);
+  border-radius: 999px;
+}
+
+.rv-summary-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(18, 128, 90, 0.68);
+}
+
+.dark .rv-summary-scroll {
+  scrollbar-color: rgba(95, 214, 160, 0.52) transparent;
+}
+
+.dark .rv-summary-scroll::-webkit-scrollbar-thumb {
+  background: rgba(95, 214, 160, 0.46);
+}

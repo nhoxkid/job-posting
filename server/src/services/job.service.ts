@@ -10,7 +10,13 @@ import type { CreateJobInput, Job, JobQuery, UpdateJobInput } from '../models/jo
 import { jobRepository, type JobRepository } from '../repositories/job.repository'
 import { ApiError } from '../utils/ApiError'
 import { enrichmentService } from './enrichment.service'
-import { geminiService } from './gemini.service'
+import {
+  geminiService,
+  isCurrentRoleSummary,
+  isLegacyCompanyFallback,
+  isLegacyRoleFallback,
+  type JobSummaries,
+} from './gemini.service'
 
 export interface Paginated<T> {
   data: T[]
@@ -18,6 +24,19 @@ export interface Paginated<T> {
   pageSize: number
   total: number
   totalPages: number
+}
+
+export interface JobDescriptionProvider {
+  fetchJobDescription(url: string): Promise<string | null>
+}
+
+export interface JobSummaryProvider {
+  isConfigured(): boolean
+  generateSummaries(
+    employerName: string,
+    position: string,
+    descriptionRaw?: string | null,
+  ): Promise<JobSummaries>
 }
 
 function requireString(value: unknown, field: string): string {
@@ -64,7 +83,11 @@ function parseCreateInput(body: unknown): CreateJobInput {
 }
 
 export class JobService {
-  constructor(private readonly repo: JobRepository = jobRepository) {}
+  constructor(
+    private readonly repo: JobRepository = jobRepository,
+    private readonly descriptions: JobDescriptionProvider = enrichmentService,
+    private readonly summaries: JobSummaryProvider = geminiService,
+  ) {}
 
   async list(query: JobQuery): Promise<Paginated<Job>> {
     const { items, total } = await this.repo.list(query)
@@ -83,25 +106,55 @@ export class JobService {
     let job = await this.repo.findById(id)
     if (!job) throw ApiError.notFound(`Job "${id}" not found`)
 
-    // On-demand AI enrichment: if summaries are missing, scrape description & call Gemini
-    if (!job.jobSummary || !job.companySummary) {
+    const legacyRoleFallback = isLegacyRoleFallback(
+      job.jobSummary,
+      job.descriptionRaw,
+      job.employerName,
+      job.position,
+    )
+    const legacyCompanyFallback = isLegacyCompanyFallback(
+      job.companySummary,
+      job.employerName,
+    )
+
+    if (!this.summaries.isConfigured()) {
+      const cleanup: UpdateJobInput = {}
+      if (legacyRoleFallback) cleanup.jobSummary = null
+      if (legacyCompanyFallback) cleanup.companySummary = null
+
+      if (Object.keys(cleanup).length > 0) {
+        const updated = await this.repo.update(id, cleanup)
+        if (updated) job = updated
+      }
+      return job
+    }
+
+    // The heading identifies the richer summary format and refreshes old short
+    // summaries once. A missing company summary may be intentional.
+    const needsSummary = !isCurrentRoleSummary(job.jobSummary) || legacyCompanyFallback
+    if (needsSummary) {
       let descriptionRaw = job.descriptionRaw
       if (!descriptionRaw) {
-        descriptionRaw = await enrichmentService.fetchJobDescription(job.applicationLink)
+        descriptionRaw = await this.descriptions.fetchJobDescription(job.applicationLink)
       }
 
-      const summaries = await geminiService.generateSummaries(
+      const generated = await this.summaries.generateSummaries(
         job.employerName,
         job.position,
         descriptionRaw,
       )
+      const update: UpdateJobInput = {}
 
-      const updated = await this.repo.update(id, {
-        descriptionRaw: descriptionRaw ?? undefined,
-        jobSummary: summaries.roleSummary,
-        companySummary: summaries.companySummary,
-      })
-      if (updated) job = updated
+      if (!job.descriptionRaw && descriptionRaw) update.descriptionRaw = descriptionRaw
+      if (generated.roleSummary) update.jobSummary = generated.roleSummary
+      else if (legacyRoleFallback) update.jobSummary = null
+      if (generated.companySummary) update.companySummary = generated.companySummary
+      else if (legacyCompanyFallback) update.companySummary = null
+
+      if (Object.keys(update).length > 0) {
+        const updated = await this.repo.update(id, update)
+        if (updated) job = updated
+      }
     }
 
     return job

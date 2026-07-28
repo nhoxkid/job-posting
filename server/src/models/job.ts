@@ -63,7 +63,14 @@ export type CreateJobInput = Pick<
   >
 
 /** Payload for updating a job. */
-export type UpdateJobInput = Partial<CreateJobInput>
+export type UpdateJobInput = Omit<
+  Partial<CreateJobInput>,
+  'jobSummary' | 'companySummary' | 'descriptionRaw'
+> & {
+  jobSummary?: string | null
+  companySummary?: string | null
+  descriptionRaw?: string | null
+}
 
 /** Filters accepted by the list endpoint. */
 export interface JobQuery {
