@@ -4,6 +4,8 @@
 
 ### The early-careers job board where the *match* comes first. 
 
+Video Submission Link: https://www.youtube.com/watch?v=ygZW_OwfJsQ
+
 [![Status](https://img.shields.io/badge/status-active%20development-2EA043)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
