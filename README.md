@@ -665,6 +665,6 @@ backend). Verify with `docker --version` and `docker compose version`.
 | **Adithya** | Wrote the SQL `CREATE TABLE` statements, verified they ran, and uploaded the document to MyLS. |
 | **Nirmaan** | Backend routes and controllers. Contributed to the README. |
 | **Duc** | Project skeleton and a runnable server entry point. Contributed to the README. |
-| **Tio** | Made the ER diagram for the tables. |
+| **Tioluwalashe** | Made the ER diagram for the tables. |
 | **Clinton** | Converted all wireframes into finished UI designs in Figma. |
 | **Michael** | Updated the activity blog with Milestone 2 tasks. |
