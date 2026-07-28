@@ -1,8 +1,11 @@
 import type { RoleVaultScreen } from '../types'
 import type { CSSProperties } from 'react'
 import type { Job } from '../../../types/job'
+import { useNavigate } from 'react-router-dom'
 import { ThemeToggle } from '../../../components/ui/ThemeToggle'
 import { usePalette } from '../../../lib/palette'
+import { useAuth } from '../../../providers/auth-context'
+import { PATH_BY_SCREEN } from '../routes'
 
 /** One pass of the hero ticker. */
 const MARQUEE_COMPANIES = ['Northwind', 'Lumen', 'Vela', 'Quanta AI', 'Beacon', 'Forge', 'Acme Labs', 'Halcyon']
@@ -26,6 +29,13 @@ export type LandingScreenProps = {
 
 export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreenProps) {
 	const p = usePalette()
+	const { user, loading, logout } = useAuth()
+	const navigate = useNavigate()
+
+	const signOut = async () => {
+		await logout()
+		navigate(PATH_BY_SCREEN.landing)
+	}
 
 	return (
 		<div style={{ animation: 'spr-up .35s ease both' }}>
@@ -45,8 +55,19 @@ export function LandingScreen({ go, selectJob, featuredHomeJobs }: LandingScreen
 					</nav>
 					<div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
 						<ThemeToggle variant='onDark' />
-						<button onClick={() => go('login')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 600, fontSize: 15, color: p.heroInk, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, borderRadius: 11, padding: '10px 18px', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>Log In</button>
-						<button onClick={() => go('register')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 700, fontSize: 15, color: p.buttonInk, background: p.buttonGradient, border: 'none', borderRadius: 11, padding: '11px 20px', cursor: 'pointer', boxShadow: p.buttonShadow }}>Sign up</button>
+						{/* Reflects the session rather than assuming a landing-page visitor is
+						    anonymous — arriving here from the logo used to look like a logout. */}
+						{loading ? null : user ? (
+							<>
+								<button onClick={() => go('recommended')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 600, fontSize: 15, color: p.heroInk, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, borderRadius: 11, padding: '10px 18px', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>My Matches</button>
+								<button onClick={signOut} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 700, fontSize: 15, color: p.buttonInk, background: p.buttonGradient, border: 'none', borderRadius: 11, padding: '11px 20px', cursor: 'pointer', boxShadow: p.buttonShadow }}>Sign out</button>
+							</>
+						) : (
+							<>
+								<button onClick={() => go('login')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 600, fontSize: 15, color: p.heroInk, background: p.heroChipBg, border: `1px solid ${p.heroBorder}`, borderRadius: 11, padding: '10px 18px', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>Log In</button>
+								<button onClick={() => go('register')} style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 700, fontSize: 15, color: p.buttonInk, background: p.buttonGradient, border: 'none', borderRadius: 11, padding: '11px 20px', cursor: 'pointer', boxShadow: p.buttonShadow }}>Sign up</button>
+							</>
+						)}
 					</div>
 				</div>
 

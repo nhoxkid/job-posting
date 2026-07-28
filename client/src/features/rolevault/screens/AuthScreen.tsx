@@ -1,9 +1,11 @@
 import { useCallback, useState, type CSSProperties, type FormEvent } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { GoogleIcon } from '../../../components/brand/GoogleIcon'
 import { ThemeToggle } from '../../../components/ui/ThemeToggle'
 import { usePalette } from '../../../lib/palette'
 import { useAuth } from '../../../providers/auth-context'
 import { useGoogleSignIn } from '../hooks/useGoogleSignIn'
+import { PATH_BY_SCREEN } from '../routes'
 import type { RoleVaultScreen } from '../types'
 
 export type AuthScreenProps = {
@@ -18,14 +20,25 @@ export function AuthScreen({ mode, go }: AuthScreenProps) {
 	const back = mode === 'login' ? 'Login' : 'Create Account'
 	const p = usePalette()
 	const { login, register, loginWithGoogle, googleEnabled } = useAuth()
+	const navigate = useNavigate()
+	const location = useLocation()
 
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState<string | null>(null)
 	const [submitting, setSubmitting] = useState(false)
 
-	/** Where a successful sign-in lands. */
-	const destination: RoleVaultScreen = mode === 'login' ? 'recommended' : 'onboarding'
+	/**
+	 * Where a successful sign-in lands: back where you were headed when the guard
+	 * turned you away (`RequireAuth` records it in history state), otherwise the
+	 * default for this mode.
+	 */
+	const from = (location.state as { from?: string } | null)?.from
+	const destination =
+		from ?? (mode === 'login' ? PATH_BY_SCREEN.recommended : PATH_BY_SCREEN.onboarding)
+
+	// `replace`, so the back button skips the login screen you just cleared.
+	const goToDestination = () => navigate(destination, { replace: true })
 
 	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault()
@@ -48,7 +61,7 @@ export function AuthScreen({ mode, go }: AuthScreenProps) {
 			} else {
 				await register(trimmedEmail, password)
 			}
-			go(destination)
+			goToDestination()
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
 		} finally {
@@ -62,14 +75,14 @@ export function AuthScreen({ mode, go }: AuthScreenProps) {
 			setSubmitting(true)
 			try {
 				await loginWithGoogle(idToken)
-				go(destination)
+				navigate(destination, { replace: true })
 			} catch (err) {
 				setError(err instanceof Error ? err.message : 'Google sign-in failed.')
 			} finally {
 				setSubmitting(false)
 			}
 		},
-		[loginWithGoogle, go, destination],
+		[loginWithGoogle, navigate, destination],
 	)
 
 	const {

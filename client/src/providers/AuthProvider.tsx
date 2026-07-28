@@ -8,6 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { authApi, type AuthUser } from '../api/auth'
+import { setUnauthorizedHandler } from '../api/client'
 import { AuthContext, type AuthContextValue } from './auth-context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -19,8 +20,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     void (async () => {
+      // `me()` swallows HTTP errors but not network ones. Without this catch a
+      // rejection leaves `loading` true forever, and every guarded screen then
+      // renders blank rather than falling back to signed-out.
       const [currentUser, config] = await Promise.all([
-        authApi.me(),
+        authApi.me().catch(() => null),
         authApi.config().catch(() => ({ googleEnabled: false })),
       ])
       if (cancelled) return
@@ -32,6 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  // Any 401 outside /auth/* means the session is gone; drop it so the guards and
+  // the nav switch to signed-out immediately.
+  useEffect(() => {
+    setUnauthorizedHandler(() => setUser(null))
+    return () => setUnauthorizedHandler(null)
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {

@@ -10,6 +10,30 @@ import { env } from '../lib/env'
 
 const BASE_URL = env.apiBaseUrl.replace(/\/$/, '')
 
+/** Carries the HTTP status, so callers can tell "not signed in" from "server broke". */
+export class ApiError extends Error {
+  // Declared and assigned separately: `erasableSyntaxOnly` rules out
+  // constructor parameter properties.
+  readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+let onUnauthorized: (() => void) | null = null
+
+/**
+ * Registered by `AuthProvider` so an expired or revoked session is noticed the
+ * moment any request comes back 401, instead of leaving a signed-out user with
+ * a signed-in looking UI until the next full page load.
+ */
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler
+}
+
 type QueryValue = string | number | boolean | undefined | null
 export type QueryParams = Record<string, QueryValue>
 
@@ -53,11 +77,15 @@ async function request<T>(
   const payload = isJson ? await res.json() : await res.text()
 
   if (!res.ok) {
+    // The /auth/* endpoints are excluded: a 401 there is the normal answer for
+    // an anonymous `me()` or a wrong password, not a session that just died.
+    if (res.status === 401 && !path.startsWith('/auth/')) onUnauthorized?.()
+
     const message =
       isJson && payload?.error?.message
         ? payload.error.message
         : `Request failed with status ${res.status}`
-    throw new Error(message)
+    throw new ApiError(message, res.status)
   }
 
   return payload as T
