@@ -30,9 +30,13 @@ CREATE TABLE users (
 --     the write when nothing changed, which keeps `updated_at` meaningful.
 CREATE TABLE job_postings (
     job_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    company VARCHAR(150) NOT NULL,
-    loc VARCHAR(150) NOT NULL,
+    -- TEXT, not VARCHAR(n). These come from third-party feeds whose lengths we
+    -- don't control: aggregators join several offices into one location string
+    -- and routinely blow past any limit we'd pick. Postgres stores TEXT and
+    -- VARCHAR identically, so a cap here buys nothing and costs failed inserts.
+    title TEXT NOT NULL,
+    company TEXT NOT NULL,
+    loc TEXT NOT NULL,
     job_type VARCHAR(20) NOT NULL,
     region VARCHAR(30) NOT NULL,
     work_model VARCHAR(20) NOT NULL,

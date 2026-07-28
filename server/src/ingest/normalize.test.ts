@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   classifyJobType,
+  isProfessionalRole,
   classifyRegion,
   contentHashOf,
   detectSponsorship,
@@ -52,6 +53,47 @@ describe('classifyJobType', () => {
 
   it('uses the employment-type hint when the title is silent', () => {
     expect(classifyJobType('Software Engineer', 'Internship')).toBe('Internship')
+  })
+})
+
+describe('isProfessionalRole', () => {
+  it.each([
+    'Football Coaches Intern',
+    'Culinary Intern',
+    'Line Cook Intern',
+    'Warehouse Associate Intern',
+    'Camp Counselor Intern',
+    'Retail Associate - New Grad',
+  ])('rejects %s', (title) => {
+    expect(isProfessionalRole(title)).toBe(false)
+  })
+
+  // These all contain a blocklisted word but are unambiguously desk jobs. Each
+  // one was a real false positive before the professional-signal override, found
+  // by running the filter across the full 13,582-title corpus.
+  it.each([
+    'Data Warehouse Intern',
+    'IT Data Warehouse Intern',
+    'Hockey Analytics Intern',
+    'Baseball Operations R&D Intern',
+    'Research Intern - AI for Nursing',
+    'Software Engineering / Computer Science Intern - Warehouse Operations & Analytics',
+    'Summer Intern - Near Patient Care Product Marketing',
+    'Visiting Engineer: Research Coach Intern',
+  ])('keeps %s — a professional signal outranks the blocklist', (title) => {
+    expect(isProfessionalRole(title)).toBe(true)
+  })
+
+  // Tech vocabulary that overlaps with service-job words. Deliberately absent
+  // from the blocklist; asserted so nobody adds them back.
+  it.each([
+    'Device Driver Engineer Intern',
+    'Inference Server Engineering Intern',
+    'Mechanical Engineering Intern',
+    'Robotics Intern',
+    'Networking Intern',
+  ])('does not mistake %s for a service role', (title) => {
+    expect(isProfessionalRole(title)).toBe(true)
   })
 })
 
@@ -173,6 +215,12 @@ describe('normalizeJob', () => {
     expect(job!.skills).toEqual(expect.arrayContaining(['Python', 'React']))
     expect(job!.fingerprint).toHaveLength(40)
     expect(job!.contentHash).toHaveLength(40)
+  })
+
+  it('rejects an early-careers role that is not a desk job', () => {
+    // The upstream feed files this one under AI/ML/Data, so the category field
+    // cannot be trusted to catch it — the title filter has to.
+    expect(normalizeJob(raw({ title: 'Football Coaches Intern' }), 'simplify-internships')).toBeNull()
   })
 
   it('rejects senior roles', () => {

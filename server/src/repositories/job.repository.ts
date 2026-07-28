@@ -172,6 +172,12 @@ export class InMemoryJobRepository implements JobRepository {
         ...existing,
         ...job,
         skills: [...job.skills],
+        // Mirrors the SQL upsert: enrichment is capped per run, so a shorter
+        // body on a later run must not replace one we already fetched in full.
+        description:
+          job.description.length >= existing.description.length
+            ? job.description
+            : existing.description,
         // Identity and first-seen date belong to the row, not the new payload.
         id: existing.id,
         createdAt: existing.createdAt,
@@ -434,7 +440,18 @@ export class SqlJobRepository implements JobRepository {
            work_model = EXCLUDED.work_model,
            sponsorship = EXCLUDED.sponsorship,
            skills = EXCLUDED.skills,
-           description = EXCLUDED.description,
+           -- Never trade a real description for a shorter one.
+           --
+           -- Enrichment is best-effort and capped per run, so a posting that
+           -- got its full body on Monday may only carry the composed summary on
+           -- Tuesday. Overwriting blindly means every capped run silently
+           -- degrades rows it already got right; keeping the longer text makes
+           -- description quality monotonic across runs.
+           description = CASE
+             WHEN length(EXCLUDED.description) >= length(job_postings.description)
+               THEN EXCLUDED.description
+             ELSE job_postings.description
+           END,
            apply_url = EXCLUDED.apply_url,
            posted_at = EXCLUDED.posted_at,
            source = EXCLUDED.source,

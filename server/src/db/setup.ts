@@ -16,12 +16,18 @@ import { join } from 'node:path'
 import { Client } from 'pg'
 import { env } from '../config/env'
 
-/** Dropped in dependency order — children before the tables they reference. */
+/**
+ * Dropped in dependency order — children before the tables they reference.
+ *
+ * `jobs` is a legacy table an earlier version of the seed routine created; it
+ * is listed so a reset clears it rather than leaving an orphan behind.
+ */
 const OWNED_TABLES = [
   'application_tracker',
   'saved_jobs',
   'faq',
   'job_postings',
+  'jobs',
   'user_preferences',
   'users',
 ]

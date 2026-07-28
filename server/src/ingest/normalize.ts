@@ -82,6 +82,85 @@ export function classifyJobType(title: string, hint?: string): JobType | null {
   return null
 }
 
+/**
+ * Occupations that don't belong on a professional/technical early-careers board.
+ *
+ * RoleVault lists desk-based professional roles. The curated feeds occasionally
+ * carry things like "Football Coaches Intern" — and that one is *categorised by
+ * the source as AI/ML/Data*, so the category field can't be trusted to catch it.
+ * The title is the only reliable signal.
+ *
+ * The hard part is false positives, because tech vocabulary overlaps heavily
+ * with service-job vocabulary. Deliberately NOT in this list:
+ *
+ *   - "server"     — "Inference Server", "Server Engineering"
+ *   - "driver"     — "Device Driver Engineer"
+ *   - "operator"   — "Operator Framework", ML "operators"
+ *   - "architect"  — a senior white-collar title
+ *   - "mechanical" — "Mechanical Engineer" is exactly what we want to keep
+ *
+ * Every entry below is either a word with no technical meaning, or is anchored
+ * to a phrase that only occurs in the service sense. Widen it only after
+ * re-running the corpus check in normalize.test.ts.
+ */
+const NON_PROFESSIONAL_PATTERNS: RegExp[] = [
+  // Sport & athletics
+  /\b(coach|coaches|coaching)\b/i,
+  /\b(football|basketball|baseball|soccer|hockey|lacrosse|volleyball|caddie)\b/i,
+  /\b(athletic trainer|strength and conditioning|equipment manager)\b/i,
+  // Food service
+  /\b(barista|bartender|chef|line cook|culinary|kitchen|dishwasher|waitstaff|waiter|waitress|food service|restaurant crew)\b/i,
+  // Retail, warehouse & manual trades
+  /\b(cashier|retail associate|sales associate|store associate|stocker|merchandiser)\b/i,
+  /\b(warehouse|forklift|delivery driver|courier|package handler)\b/i,
+  /\b(janitor|custodian|housekeep\w*|groundskeep\w*|landscap\w*)\b/i,
+  /\b(welder|plumber|electrician|carpenter|roofer)\b/i,
+  // Personal & care services
+  /\b(nurse|nursing|caregiver|caretaker|home health|patient care|phlebotom\w*|dental assistant|veterinary)\b/i,
+  /\b(massage|cosmetolog\w*|barber|salon|esthetician|nail technician)\b/i,
+  // Security, transport, hospitality
+  /\b(security guard|lifeguard|flight attendant|bus driver|valet|bellhop)\b/i,
+  // Education support & seasonal
+  /\b(camp counselor|camp counsellor|childcare|babysitt\w*|daycare|substitute teacher)\b/i,
+]
+
+/**
+ * Terms that mark a posting as a professional desk role regardless of anything
+ * else in the title.
+ *
+ * This override exists because the blocklist alone is far too blunt. Measured
+ * against the real corpus, a blocklist on its own threw out "Data Warehouse
+ * Intern", "Hockey Analytics Intern", "Baseball Operations R&D Intern",
+ * "Research Intern - AI for Nursing" and "Software Engineering Intern -
+ * Warehouse Operations" — every one of them a desk job that merely *mentions*
+ * a domain. Two thirds of its rejections were wrong.
+ *
+ * A sports team hiring an analyst is hiring an analyst. The discipline in the
+ * title is a stronger signal than the industry it serves, so it wins.
+ */
+// Note the trailing `\w*` on anything that pluralises or inflects: a bare
+// `analytic` never matches "Analytics", because `\b` requires a non-word
+// character straight after. That exact slip let "Hockey Analytics Intern"
+// through to the blocklist on the first pass.
+const PROFESSIONAL_SIGNALS =
+  /\b(software|engineer\w*|developer|programm\w*|comput\w*|data|analytic\w*|analyst\w*|analysis|research\w*|scientist\w*|science|machine learning|ai|ml|quant\w*|statistic\w*|actuarial|product manage\w*|product market\w*|marketing|financ\w*|accounting|audit\w*|consult\w*|strategy|legal|counsel|design\w*|ux|ui|security|cyber\w*|network\w*|cloud|devops|infrastructure|platform\w*|database\w*|firmware|hardware|electrical|mechanical|robotic\w*|aerospace|chemical|biomedical|r&d|business intelligence|it|information system\w*|supply chain|operations research)\b/i
+
+/**
+ * Whether a posting is a professional/desk role worth listing on this board.
+ *
+ * Runs after the early-careers check, so it only ever sees intern/new-grad
+ * postings and never has to reason about senior titles.
+ *
+ * A professional signal wins over the blocklist. That ordering is the whole
+ * design: it is far worse to drop a real software internship because the team
+ * happens to serve a kitchen or a hockey rink than to let the occasional
+ * genuine service role through.
+ */
+export function isProfessionalRole(title: string): boolean {
+  if (PROFESSIONAL_SIGNALS.test(title)) return true
+  return !NON_PROFESSIONAL_PATTERNS.some((pattern) => pattern.test(title))
+}
+
 const REGION_RULES: { pattern: RegExp; region: Region }[] = [
   { pattern: /\b(remote|anywhere|distributed|work from home|wfh)\b/i, region: 'Remote' },
   {
@@ -231,6 +310,17 @@ export function contentHashOf(job: Omit<Job, 'id' | 'createdAt' | 'updatedAt' | 
 export type NormalizedJob = Omit<Job, 'id' | 'createdAt' | 'updatedAt'>
 
 /**
+ * Trim a field to a sane display length.
+ *
+ * The database columns are TEXT so nothing here is required for the insert to
+ * succeed; this is about the UI. A location listing fifteen offices makes a
+ * table row unreadable, so it is cut with an ellipsis rather than stored whole.
+ */
+function clamp(value: string, max: number): string {
+  return value.length <= max ? value : `${value.slice(0, max - 1).trimEnd()}…`
+}
+
+/**
  * Normalise one raw posting, or return null to reject it.
  *
  * Rejection is not an error: most of what these feeds carry is senior roles
@@ -244,14 +334,18 @@ export function normalizeJob(raw: RawJob, source: string): NormalizedJob | null 
   const type = classifyJobType(title, raw.employmentTypeHint)
   if (type === null) return null
 
+  // Early-careers, but not a desk role — e.g. "Football Coaches Intern", which
+  // the upstream feed files under AI/ML/Data.
+  if (!isProfessionalRole(title)) return null
+
   const description = htmlToText(raw.description ?? '')
   const location = raw.location?.trim() || 'Not specified'
   const region = classifyRegion(location, raw.remoteHint)
 
   const base = {
-    title,
-    company,
-    loc: location,
+    title: clamp(title, 200),
+    company: clamp(company, 150),
+    loc: clamp(location, 150),
     type,
     region,
     workModel: classifyWorkModel(location, description),

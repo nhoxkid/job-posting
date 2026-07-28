@@ -114,6 +114,29 @@ describe('runIngest de-duplication', () => {
     expect(byTitle['Mobile Intern']).toBe('unknown')
   })
 
+  it('never replaces a fetched description with a shorter one', async () => {
+    // Enrichment is capped per run, so a later run can legitimately carry only
+    // the short composed summary. It must not undo work an earlier run did.
+    const repo = emptyRepo()
+    const full = 'A'.repeat(3000)
+    await runIngest({
+      providers: [stubProvider('gh', [posting({ description: full })])],
+      repository: repo,
+      log: silent,
+      enrichLimit: 0,
+    })
+
+    await runIngest({
+      providers: [stubProvider('gh', [posting({ description: 'Short summary.' })])],
+      repository: repo,
+      log: silent,
+      enrichLimit: 0,
+    })
+
+    const stored = await repo.list({ pageSize: 10 })
+    expect(stored.items[0].description).toBe(full)
+  })
+
   it('keeps genuinely different postings apart', async () => {
     const repo = emptyRepo()
     const provider = stubProvider('gh', [
