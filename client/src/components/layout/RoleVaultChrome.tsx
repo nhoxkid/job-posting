@@ -34,7 +34,7 @@ export const NavBar = ({ screen, go, variant = 'default' }: { screen: RoleVaultS
 					{(['browse', 'recommended', 'faq'] as const).map((item) => {
 						const labels: Record<string, string> = { browse: 'Browse', recommended: 'Recommended', faq: 'FAQ' }
 						return (
-							<span key={item} onClick={() => go(item)} className="v1-nav-link" style={{ fontWeight: screen === item ? 700 : 600, fontSize: 15, color: screen === item ? p.ink : p.body, cursor: 'pointer' }}>
+							<span key={item} onClick={() => go(item)} className="rv-nav-link" style={{ fontWeight: screen === item ? 700 : 600, fontSize: 15, color: screen === item ? p.ink : p.body, cursor: 'pointer' }}>
 								{labels[item]}
 							</span>
 						)

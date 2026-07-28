@@ -34,8 +34,8 @@
   --rv-deep: #08231a;
 
   /* Hover states for the inline-styled screens. These live in CSS (rather than
-   * the `usePalette` set) because they are :hover rules in a global <style>
-   * block, which inline styles can't express — see App.tsx. */
+   * the `usePalette` set) because :hover cannot be expressed as an inline style.
+   * The rules that consume them are at the end of this file. */
   --rv-hover-link: #1a7a52;
   --rv-hover-pill-border: #1a7a52;
   --rv-hover-pill-ink: #15603f;
@@ -44,6 +44,15 @@
   --rv-hover-row: #f7fbf8;
   --rv-hover-rec-shadow: 0 10px 26px rgba(16, 33, 27, 0.07);
   --rv-hover-nav-dark: #9fe9c4;
+
+  /* Interactive feedback: how far a control rises and how much it lightens.
+   * Light surfaces are already near-white, so the lift and shadow carry most of
+   * the signal here and the brightening stays subtle to avoid washing out text. */
+  --rv-lift: -2px;
+  --rv-lift-card: -3px;
+  --rv-lighten: 1.06;
+  --rv-press: 0px;
+  --rv-hover-elevation: 0 6px 18px rgba(16, 33, 27, 0.12);
 }
 
 .dark {
@@ -71,6 +80,14 @@
   --rv-hover-row: #10342a;
   --rv-hover-rec-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
   --rv-hover-nav-dark: #9fe9c4;
+
+  /* The dark surfaces have real headroom to brighten into, so lightening does
+   * the heavy lifting on this theme and can be pushed much further. */
+  --rv-lift: -2px;
+  --rv-lift-card: -3px;
+  --rv-lighten: 1.18;
+  --rv-press: 0px;
+  --rv-hover-elevation: 0 8px 22px rgba(0, 0, 0, 0.45);
 }
 
 @theme inline {
@@ -184,4 +201,163 @@
 
 .dark .rv-summary-scroll::-webkit-scrollbar-thumb {
   background: rgba(95, 214, 160, 0.46);
+}
+
+/* ---------------------------------------------------------------------------
+ * Interactive feedback
+ *
+ * The screens in features/rolevault are styled inline, so the great majority of
+ * their controls (38 buttons, ~69 clickable spans and divs) carry no class to
+ * hang a :hover rule on. Rather than thread a class through every one, the
+ * selectors below match what a control *is*: a real button or link, an ARIA
+ * button, or an element React rendered with `cursor: pointer` in its style
+ * attribute — which is exactly how those clickable spans and divs mark
+ * themselves. The attribute matches only the clickable element itself, not the
+ * children that merely inherit the cursor, so nested controls never stack two
+ * transforms.
+ *
+ * `!important` is required throughout: these properties are set inline on the
+ * same elements, and inline styles otherwise win.
+ * ------------------------------------------------------------------------- */
+
+button,
+a,
+summary,
+[role='button'],
+[role='link'],
+[role='tab'],
+[style*='cursor: pointer'] {
+  transition:
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1),
+    filter 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+button:hover,
+a:hover,
+summary:hover,
+[role='button']:hover,
+[role='link']:hover,
+[role='tab']:hover,
+[style*='cursor: pointer']:hover {
+  transform: translateY(var(--rv-lift)) !important;
+  filter: brightness(var(--rv-lighten)) !important;
+}
+
+/* Buttons read as raised objects, so they also gain elevation. Text links and
+ * bare clickable text do not — a drop shadow on a word looks like a mistake. */
+button:hover,
+[role='button']:hover {
+  box-shadow: var(--rv-hover-elevation) !important;
+}
+
+/* Return to rest on press, so a click feels like it lands. */
+button:active,
+a:active,
+[role='button']:active,
+[style*='cursor: pointer']:active {
+  transform: translateY(var(--rv-press)) !important;
+  filter: brightness(1) !important;
+}
+
+/* Disabled controls are not interactive and must not appear to respond. */
+button:disabled,
+button[aria-disabled='true'],
+[aria-disabled='true'] {
+  transform: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Keyboard parity: the same affordance, plus a visible ring. */
+button:focus-visible,
+a:focus-visible,
+[role='button']:focus-visible,
+[style*='cursor: pointer']:focus-visible {
+  transform: translateY(var(--rv-lift)) !important;
+  filter: brightness(var(--rv-lighten)) !important;
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Per-component hover colour and surface treatment.
+ *
+ * These previously lived in a <style> block inside App.tsx, split from the
+ * variables they consume. That split is how `.rv-nav-link` and the `v1-nav-link`
+ * the markup actually used drifted apart without anything failing loudly, so
+ * every hover rule now lives here beside its tokens.
+ *
+ * `.rv-pill` is deliberately absent: it had no markup using it, and its
+ * light-theme greens were wrong for the dark hero its pills sit on. The generic
+ * rules above cover them. */
+.rv-nav-link:hover {
+  color: var(--rv-hover-link) !important;
+}
+
+.rv-nav-link-dark:hover,
+.rv-footer-link:hover {
+  color: var(--rv-hover-nav-dark) !important;
+}
+
+.rv-job-card:hover {
+  box-shadow: var(--rv-hover-card-shadow) !important;
+  border-color: var(--rv-hover-card-border) !important;
+}
+
+.rv-rec-card:hover {
+  box-shadow: var(--rv-hover-rec-shadow) !important;
+  border-color: var(--rv-hover-card-border) !important;
+}
+
+.rv-faq-card:hover {
+  border-color: var(--rv-hover-card-border) !important;
+}
+
+.rv-table-row:hover {
+  background: var(--rv-hover-row) !important;
+}
+
+/* Cards travel a little further than controls, since they are larger. */
+.rv-job-card:hover,
+.rv-rec-card:hover,
+.rv-faq-card:hover {
+  transform: translateY(var(--rv-lift-card)) !important;
+}
+
+/* Table rows sit flush in a list; lifting one would break the grid. */
+.rv-table-row:hover {
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  a,
+  summary,
+  [role='button'],
+  [role='link'],
+  [role='tab'],
+  [style*='cursor: pointer'] {
+    transition: filter 0.18s ease, color 0.18s ease;
+  }
+
+  /* Keep the colour shift as the hover signal, drop the movement. */
+  button:hover,
+  a:hover,
+  summary:hover,
+  [role='button']:hover,
+  [role='link']:hover,
+  [role='tab']:hover,
+  [style*='cursor: pointer']:hover,
+  button:focus-visible,
+  a:focus-visible,
+  [role='button']:focus-visible,
+  [style*='cursor: pointer']:focus-visible,
+  .rv-job-card:hover,
+  .rv-rec-card:hover,
+  .rv-faq-card:hover {
+    transform: none !important;
+  }
 }

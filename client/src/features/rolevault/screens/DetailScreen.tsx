@@ -37,7 +37,7 @@ export function DetailScreen({ go, jobId }: DetailScreenProps) {
 					</div>
 					<div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
 						<ThemeToggle />
-						<span onClick={() => go('browse')} className='v1-nav-link' style={{ fontWeight: 600, fontSize: 15, color: p.body, cursor: 'pointer' }}>← Back to listings</span>
+						<span onClick={() => go('browse')} className='rv-nav-link' style={{ fontWeight: 600, fontSize: 15, color: p.body, cursor: 'pointer' }}>← Back to listings</span>
 					</div>
 				</div>
 			</div>
